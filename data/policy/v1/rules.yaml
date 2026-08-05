@@ -1,0 +1,16 @@
+rules:
+  - when: no_order_found
+    decision: REQUEST_INFO
+    because: Need the order info.
+
+  - when: return_window_unknown
+    decision: REQUEST_INFO
+    because: Delivery date missing, so the window cannot be checked.
+
+  - when: within_return_window
+    decision: APPROVE_REFUND
+    because: Inside the standard return period.
+
+  - when: outside_return_window
+    decision: DENY_REFUND
+    because: The return period is over.

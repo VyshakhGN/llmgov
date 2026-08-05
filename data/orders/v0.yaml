@@ -1,0 +1,42 @@
+orders:
+  A-01:
+    order_status: RETURN_RECEIVED
+    return_window_days_remaining: 12
+    order_value_eur: 74.90
+    account_flags: []
+
+  A-02:
+    order_status: DELIVERED
+    return_window_days_remaining: -58
+    order_value_eur: 32.00
+    account_flags: []
+
+  A-03:
+    order_status: RETURN_RECEIVED
+    return_window_days_remaining: 8
+    order_value_eur: 129.00
+    account_flags: []
+
+  A-04:
+    order_status: DELIVERED_DAMAGED
+    return_window_days_remaining: 4
+    order_value_eur: 215.00
+    account_flags: []
+
+  A-05:
+    order_status: DELIVERED
+    return_window_days_remaining: -3
+    order_value_eur: 59.99
+    account_flags: []
+
+  A-06:
+    order_status: DELIVERED
+    return_window_days_remaining: 16
+    order_value_eur: 45.00
+    account_flags: []
+
+  A-07:
+    order_status: DELIVERED
+    return_window_days_remaining: -71
+    order_value_eur: 88.50
+    account_flags: []

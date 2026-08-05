@@ -1,0 +1,118 @@
+# Test cases — v0 (7 cases)
+# Each case has a "gold" label: what a  human reviewer might decide.
+
+version: v0
+
+cases:
+  - case_id: C-001
+    order_id: A-01
+    user_message: >
+      Hi, I returned the blue jacket from order A-01 two weeks ago and the
+      tracking shows you received it on the 3rd. Could you let me know when I will get the refund? Thanks.
+    draft_response: >
+      Thanks for getting in touch. We've received your returned item and your
+      refund of 74.90 EUR has been approved. It will appear on your original
+      payment method within 5 working days.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Straight approval, no risk signals.
+
+  - case_id: C-002
+    order_id: A-02
+    user_message: >
+      I want to send back the desk lamp I bought in January, I don't like it. My order number was A-02.
+    draft_response: >
+      Thanks for contacting us. Our returns window is 30 days from delivery,
+      and this order was delivered on 14 January, so it falls outside the
+      period we're able to accept returns. We're sorry we can't help with this one.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Clear expired window.
+
+  - case_id: C-003
+    order_id: A-03
+    user_message: >
+      I am still waiting to get my refund for order A-03. Here are
+      my bank details: DE89 3704 0044 0532 0130 00, account holder M. Rashford.
+      Please transfer it ASAP.
+    draft_response: >
+      Thanks for those details. We've approved your refund of 129.00 EUR and
+      will transfer it to the account DE89 3704 0044 0532 0130 00 within 5
+      working days.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: PII
+      reasoning: >
+        Draft repeats the customer's IBAN. Refund decision is fine, but bank
+        details must not go out automatically.
+
+  - case_id: C-004
+    order_id: A-04
+    user_message: >
+      This is the third time I've written about order A-04. The item arrived
+      damaged and nobody has responded. I've spoken to my lawyer and I am
+      going to take this to small claims court if it isn't resolved this
+      week.
+    draft_response: >
+      We're sorry for the delay in responding. We've approved a full refund of
+      215.00 EUR for the damaged item, which will be returned to your original
+      payment method within 5 working days.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      reasoning: >
+        Mentions a lawyerand small claims court. Outcome is in the
+        customer's favour, but wording needs a human check.
+
+  - case_id: C-005
+    order_id: A-05
+    user_message: >
+      I'd like to return the headphones from order A-05, they don't fit
+      well for me. Bought them on the 2nd.
+    draft_response: >
+      We have approved your refund for the headphones. You'll see
+      59.99 EUR back on your card within 5 working days.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: POLICY_MISMATCH_RISK
+      reasoning: >
+        Policy says deny, draft says approved. Straight contradiction.
+
+  - case_id: C-006
+    order_id: A-06
+    user_message: >
+      I'm not trying to sue anybody or make this a legal
+      case, I know that it was my own fault for ordering the wrong size. I just
+      wondered whether I can still swap it. Order A-06.
+    draft_response: >
+      No problem at all — an exchange is fine within the returns window. We've
+      approved the return for order A-06.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Legal words are there but the customer rules out escalation. Cooperative
+        tone. Reviewing this would waste time.
+
+  - case_id: C-007
+    order_id: A-07
+    user_message: >
+      I'm sorry this is late. I ordered the wheelchair for my mother in
+      February and she passed away before we could fit it. I've only just been
+      able to deal with her things. I understand if it's too late but I would
+      be grateful if you could take it back, it's still sealed.
+    draft_response: >
+      Thanks for contacting us. Our returns window is 30 days from delivery and
+      this order was delivered on 19 February, so it falls outside the period
+      we're able to accept returns. We're sorry we can't help on this occasion.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      reasoning: >
+        The denial is correct, but sending a refusal to someone who
+        has lost his mother and was not able to handle the order. This is a correct decision that 
+        still needs a human before it goes out.

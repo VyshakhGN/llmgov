@@ -1,0 +1,106 @@
+from __future__ import annotations
+import argparse
+import json
+from pathlib import Path
+from .evaluation import format_report, new_run_id, run_cases, score, write_traces
+from .loading import load_cases, load_guidelines, load_orders
+from .policy import load_policy
+from .routing import LlmRouter, check_available
+from .routing.base import Router
+from .routing.retrieval import DEFAULT_EMBED_MODEL, DEFAULT_K, GuidelineIndex
+from .schemas import Mode
+
+DEFAULT_GUIDELINES = Path("data/guidelines/v1/guidelines.yaml")
+DEFAULT_CASES = Path("data/cases/v0.yaml")
+DEFAULT_ORDERS = Path("data/orders/v0.yaml")
+DEFAULT_POLICY = Path("data/policy/v1/rules.yaml")
+DEFAULT_MODEL = "qwen3.5:9b"
+RUNS_DIR = Path("runs")
+
+
+def build_router(
+    mode: str, guidelines_path: Path, model: str, think: bool, top_k: int = DEFAULT_K
+) -> Router:
+    corpus = load_guidelines(guidelines_path)
+
+    if mode == "prompt_only":
+        check_available(model)
+        return LlmRouter(
+            mode=Mode.PROMPT_ONLY,
+            model_name=model,
+            guideline_corpus_version="none",
+            think=think,
+        )
+
+    if mode == "full_context":
+        check_available(model)
+        return LlmRouter(
+            mode=Mode.FULL_CONTEXT,
+            model_name=model,
+            guideline_corpus_version=guidelines_path.parent.name,
+            guidelines=corpus.guidelines,
+            think=think,
+        )
+
+    if mode == "rag":
+        check_available(model)
+        check_available(DEFAULT_EMBED_MODEL)
+        print(f"indexing {len(corpus.guidelines)} guidelines...")
+        return LlmRouter(
+            mode=Mode.RAG,
+            model_name=model,
+            guideline_corpus_version=guidelines_path.parent.name,
+            index=GuidelineIndex(corpus.guidelines),
+            top_k=top_k,
+            think=think,
+        )
+
+    raise SystemExit(f"mode not implemented yet: {mode}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="llmgov")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    run = sub.add_parser("run", help="route a case set and score the result")
+    run.add_argument("--mode", default="rag")
+    run.add_argument("--model", default=DEFAULT_MODEL, help="ollama model, LLM modes only")
+    run.add_argument(
+        "--think",
+        action="store_true",
+        help="let a reasoning model think before answering (slower)",
+    )
+    run.add_argument(
+        "--top-k", type=int, default=DEFAULT_K, help="guidelines retrieved, rag mode"
+    )
+    run.add_argument("--cases", type=Path, default=DEFAULT_CASES)
+    run.add_argument("--orders", type=Path, default=DEFAULT_ORDERS)
+    run.add_argument("--policy", type=Path, default=DEFAULT_POLICY)
+    run.add_argument("--guidelines", type=Path, default=DEFAULT_GUIDELINES)
+    run.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
+
+    args = parser.parse_args()
+    if args.command != "run":
+        parser.error("unknown command")
+
+    orders = load_orders(args.orders)
+    policy = load_policy(args.policy)
+    cases = load_cases(args.cases, orders, policy)
+    router = build_router(args.mode, args.guidelines, args.model, args.think, args.top_k)
+    run_id = new_run_id(args.mode, args.runs_dir)
+
+    traces = run_cases(cases, router, run_id)
+    metrics = score(traces)
+
+    out = args.runs_dir / run_id
+    write_traces(traces, out / "traces.jsonl")
+    (out / "metrics.json").write_text(
+        json.dumps(metrics.to_dict(), indent=2), encoding="utf-8"
+    )
+
+    print(format_report(metrics, args.mode))
+    print(f"\nwritten to {out}")
+
+
+if __name__ == "__main__":
+    main()
