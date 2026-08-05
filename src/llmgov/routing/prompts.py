@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ..schemas import Case, Guideline, RiskSignals
+from ..schemas import Case, Guideline
 
 PROMPT_VERSION = "v1"
 
@@ -60,33 +60,13 @@ def render_guidelines(guidelines: list[Guideline]) -> str:
     return "ROUTING GUIDELINES:\n" + "\n".join(lines)
 
 
-def render_risk_signals(signals: RiskSignals) -> str:
-    found = []
-    if signals.pii_matches:
-        found.append(f"personal data patterns: {', '.join(signals.pii_matches)}")
-    if signals.legal_keyword_matches:
-        found.append(f"legal keywords: {', '.join(signals.legal_keyword_matches)}")
-    if signals.policy_draft_mismatch:
-        found.append("the draft may not match the business decision")
-    if signals.missing_order_id:
-        found.append("no order id could be resolved")
-
-    body = "\n".join(f"- {x}" for x in found) if found else "- nothing detected"
-    return (
-        "AUTOMATED CHECKS (pattern matching only, may be wrong in context):\n" + body
-    )
-
-
 def build_user_prompt(
     case: Case,
     guidelines: list[Guideline] | None = None,
-    signals: RiskSignals | None = None,
 ) -> str:
     parts = [render_case(case)]
     if guidelines:
         parts.append(render_guidelines(guidelines))
-    if signals is not None:
-        parts.append(render_risk_signals(signals))
     return "\n\n".join(parts)
 
 

@@ -41,7 +41,6 @@ class LlmRouter:
         guidelines: list[Guideline] | None = None,
         index: GuidelineIndex | None = None,
         top_k: int = DEFAULT_K,
-        use_risk_signals: bool = False,
         mask_pii: bool = True,
         seed: int = 0,
         think: bool | None = None,
@@ -53,7 +52,6 @@ class LlmRouter:
         self.guidelines = guidelines
         self.index = index
         self.top_k = top_k
-        self.use_risk_signals = use_risk_signals
         self.mask_pii = mask_pii
         self.seed = seed
         self.think = think
@@ -63,7 +61,6 @@ class LlmRouter:
         if think is not None:
             self.model_params["think"] = think
         self.last_usage: dict[str, int] = {}
-        self.last_masked: list[str] = []
         self.last_masked_text: str = ""
 
     def route(self, case: Case, risk_signals: RiskSignals) -> RoutingDecision:
@@ -75,11 +72,7 @@ class LlmRouter:
             shown = {r.guideline_id for r in retrieved}
             guidelines = [g for g in self.index.guidelines if g.guideline_id in shown]
 
-        prompt = build_user_prompt(
-            case,
-            guidelines=guidelines,
-            signals=risk_signals if self.use_risk_signals else None,
-        )
+        prompt = build_user_prompt(case, guidelines=guidelines)
 
         extra = {} if self.think is None else {"think": self.think}
         response = self.client.chat(
@@ -108,17 +101,15 @@ class LlmRouter:
         return decision
 
     def _mask(self, case: Case) -> Case:
-        self.last_masked, self.last_masked_text = [], ""
+        self.last_masked_text = ""
         if not self.mask_pii:
             return case
 
         message, applied_message = mask_text(case.user_message)
         draft, applied_draft = mask_text(case.draft_response)
-        applied = sorted(set(applied_message + applied_draft))
-        if not applied:
+        if not (applied_message or applied_draft):
             return case
 
-        self.last_masked = applied
         self.last_masked_text = " ".join(message.split())
         return case.model_copy(
             update={"user_message": message, "draft_response": draft}

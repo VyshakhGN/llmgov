@@ -34,7 +34,6 @@ class Mode(str, Enum):
     PROMPT_ONLY = "prompt_only"
     FULL_CONTEXT = "full_context"
     RAG = "rag"
-    HYBRID = "hybrid"
 
 
 
