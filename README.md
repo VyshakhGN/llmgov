@@ -114,6 +114,7 @@ person, but then nothing has been automated. Finding the balance is the research
 question.
 
 
+## Future Work
 Many enhancements are planned for the future, including a nice UI with FastAPI backend, custom refund requests through the UI and LLM-generated
 drafts rather than hard-coded, customer history feeding the decision, a larger case set with guidelines and rules as PDF's, fine-tuning the model, and splitting the components into separate services, stay tuned!
 
