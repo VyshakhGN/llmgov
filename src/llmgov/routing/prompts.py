@@ -45,7 +45,10 @@ CUSTOMER MESSAGE:
 ORDER FACTS:
 order id: {f.order_id or "not found"}
 status: {f.order_status or "unknown"}
-return window days remaining: {_fmt(f.return_window_days_remaining)}
+category: {f.category.value if f.category else "unknown"}
+delivered: {_fmt(f.delivered_days_ago)} days ago
+faulty on arrival: {"yes" if f.is_faulty else "no"}
+condition on return: {f.return_condition.value if f.return_condition else "not yet returned"}
 order value: {_fmt(f.order_value_eur)} EUR
 account flags: {flags}
 

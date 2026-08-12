@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from ..schemas import PolicyDecision, SystemFacts
+from ..schemas import PolicyDecision, ReturnCondition, SystemFacts
 
 
 @dataclass(frozen=True)
@@ -17,17 +17,42 @@ class PolicyOutcome:
 
 
 class PolicyEngine:
-    def __init__(self, rules: list[dict[str, str]]) -> None:
+    def __init__(
+        self,
+        rules: list[dict[str, str]],
+        return_windows: dict[str, int],
+        damaged_return_deduction_pct: float = 0.0,
+    ) -> None:
         self.rules = rules
+        self.return_windows = return_windows
+        self.damaged_return_deduction_pct = damaged_return_deduction_pct
         self.checks: dict[str, Callable[[SystemFacts], bool]] = {
             "no_order_found": lambda f: f.order_id is None,
-            "return_window_unknown": lambda f: f.return_window_days_remaining is None,
-            "within_return_window": lambda f: (f.return_window_days_remaining or 0) >= 0,
-            "outside_return_window": lambda f: (f.return_window_days_remaining or 0) < 0,
+            "delivery_date_unknown": lambda f: f.delivered_days_ago is None,
+            "category_unknown": lambda f: f.category is None,
+            "item_faulty": lambda f: f.is_faulty,
+            "return_damaged": lambda f: f.return_condition is ReturnCondition.DAMAGED,
+            "within_return_window": lambda f: f.delivered_days_ago <= self._window(f),
+            "outside_return_window": lambda f: f.delivered_days_ago > self._window(f),
         }
 
+    def refund_amount(self, facts: SystemFacts, decision: PolicyDecision) -> float | None:
+        if facts.order_value_eur is None:
+            return None
+        if decision is PolicyDecision.APPROVE_REFUND:
+            return facts.order_value_eur
+        if decision is PolicyDecision.PARTIAL_REFUND:
+            kept = 1 - self.damaged_return_deduction_pct / 100
+            return round(facts.order_value_eur * kept, 2)
+        return None
+
+    def _window(self, facts: SystemFacts) -> int:
+        window = self.return_windows.get(facts.category.value)
+        if window is None:
+            raise ValueError(f"no return window configured for {facts.category.value}")
+        return window
+
     def decide(self, facts: SystemFacts) -> PolicyOutcome:
-        """First matching rule wins."""
         for rule in self.rules:
             name = rule["when"]
             check = self.checks.get(name)
@@ -50,4 +75,8 @@ class PolicyEngine:
 def load_policy(path: str | Path) -> PolicyEngine:
     with open(path, encoding="utf-8") as fh:
         doc: dict[str, Any] = yaml.safe_load(fh)
-    return PolicyEngine(rules=doc["rules"])
+    return PolicyEngine(
+        rules=doc["rules"],
+        return_windows=doc["return_windows"],
+        damaged_return_deduction_pct=doc.get("damaged_return_deduction_pct", 0.0),
+    )

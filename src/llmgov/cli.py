@@ -14,7 +14,7 @@ DEFAULT_GUIDELINES = Path("data/guidelines/v1/guidelines.yaml")
 DEFAULT_CASES = Path("data/cases/v0.yaml")
 DEFAULT_ORDERS = Path("data/orders/v0.yaml")
 DEFAULT_POLICY = Path("data/policy/v1/rules.yaml")
-DEFAULT_MODEL = "qwen3.5:9b"
+DEFAULT_MODEL = "qwen3.5:4b"
 RUNS_DIR = Path("runs")
 
 

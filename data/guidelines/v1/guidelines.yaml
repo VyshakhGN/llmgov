@@ -1,126 +1,127 @@
-high_order_value_eur: 500
-
 guidelines:
   - guideline_id: G-PII-001
     risk_category: PII
+    source: GDPR Art. 5(1)(c) — data minimisation
     text: >
-      If the customer message or the draft response contains payment
-      instrument details — an IBAN, bank account number, card number, CVV, or expiry date — the case must be routed to human
-      review. Payment details must never be sent back in automated
-      reply.
+      If the reply repeats personal identifiers that are not needed to answer the
+      request like a date of birth, a home address, a national identification number, then route the case to human review.
 
   - guideline_id: G-PII-002
     risk_category: PII
+    source: GDPR Art. 32 — security of processing
     text: >
-      If the draft response repeats personal identifiers that are not
-      required to answer the request like date of birth, or address — route the case to
-      human review so the these can be removed or masked.
-
-  - guideline_id: G-PII-003
-    risk_category: PII
-    text: >
-      If the customer has disclosed account credentials, a password, etc., route the case to human review. The
-      automated reply must not repeat the credential.
+      If the customer has disclosed account credentials, a password, or a
+      one-time code, route the case to human review. The reply must never repeat
+      or acknowledge the credential.
 
   - guideline_id: G-LEG-001
     risk_category: LEGAL_THREAT
+    source: ADR Directive 2013/11/EU; German VSBG
     text: >
-      If the customer refers to a lawyer, legal action, court
-      proceedings, or a small-claims filing, route the case to human review
-      regardless.
+      If the customer refers to a lawyer, legal action, court proceedings, or a
+      small-claims filing, route the case to human review regardless of the
+      refund decision.
 
   - guideline_id: G-LEG-002
     risk_category: LEGAL_THREAT
+    source: ADR Directive 2013/11/EU; ODR Regulation 524/2013
     text: >
-      If the customer invokes consumer protection laws or states an intention to file a formal complaint with an
-      external body, route the case to human review.
+      If the customer invokes consumer protection law, a regulator, or an
+      ombudsman, or says they will file a formal complaint with an external body,
+      route the case to human review.
 
   - guideline_id: G-LEG-003
     risk_category: LEGAL_THREAT
+    source: PSD2 (Directive 2015/2366); card scheme chargeback rules
     text: >
-      If the customer threatens to initiate a chargeback or a payment dispute
-      through their bank or card issuer, route the case to human review.
+      If the customer threatens a chargeback or a payment dispute through their
+      bank or card issuer, route the case to human review.
+
 
   - guideline_id: G-MIS-001
     risk_category: POLICY_MISMATCH_RISK
+    source: UCPD 2005/29/EC — misleading information to consumers
     text: >
-      If the draft response communicates an outcome that contradicts the
-      recorded policy decision — for example the policy denies the refund but
-      the draft tells the customer it has been approved — route the case to
-      human review.
+      If the reply communicates an outcome that contradicts the recorded business
+      decision — for example the decision denies the refund but the reply says it
+      was approved — route the case to human review.
 
   - guideline_id: G-MIS-002
     risk_category: POLICY_MISMATCH_RISK
+    source: UCPD 2005/29/EC — misleading information to consumers
     text: >
-      If the policy decision is to request further information but the draft
-      response instead grants or refuses the refund outright, route the case to
-      human review.
+      If the business decision is to request more information but the reply
+      grants or refuses the refund outright, route the case to human review.
 
   - guideline_id: G-MIS-003
     risk_category: POLICY_MISMATCH_RISK
+    source: UCPD 2005/29/EC — misleading information to consumers
     text: >
-      If the draft response states a refund amount, refund method, or
-      processing timeline that is not supported by the recorded system facts,
-      route the case to human review.
+      If the reply states a refund amount, method, or timeline that the recorded
+      facts do not support, route the case to human review rather than committing
+      to terms that may not hold.
 
   - guideline_id: G-FRD-001
     risk_category: FRAUD_RISK
+    source: Company policy
     text: >
       If the account carries a fraud, abuse, or chargeback-history flag, route
       the case to human review regardless of the refund decision.
 
   - guideline_id: G-FRD-002
     risk_category: FRAUD_RISK
+    source: Company policy
     text: >
-      If the customer has submitted an unusual number of refund or
-      non-delivery claims in a short period, route the case to human review.
+      If the customer has made an unusual number of refund or non-delivery claims
+      in a short period, route the case to human review.
 
   - guideline_id: G-FRD-003
     risk_category: FRAUD_RISK
+    source: Company policy
     text: >
-      If the customer's account of events conflicts with the recorded delivery
-      evidence — for example the customer reports non-delivery while the order
-      is recorded as delivered and signed for — route the case to human review.
+      If the customer's account of events conflicts with the recorded facts — for
+      example claiming non-delivery for an order recorded as delivered — route the
+      case to human review.
 
-  - guideline_id: G-INF-002
+  - guideline_id: G-INF-001
     risk_category: MISSING_INFO
+    source: Company policy — operational
     text: >
-      If the recorded system facts are incomplete or mutually inconsistent for
-      the decision being communicated — for example an unknown order status or
-      a missing return window — route the case to human review.
+      If the recorded facts are incomplete or contradict each other for the
+      decision being communicated — an unknown category, a missing delivery date —
+      route the case to human review.
 
   - guideline_id: G-BUS-001
     risk_category: BUSINESS_RISK
+    source: Company policy
     text: >
-      If the refund is being denied and the order value exceeds the
-      high-value threshold of 500 EUR, route the case to human review before
-      the denial is communicated.
+      If the reply communicates a partial refund, route the case to human review.
+      A deduction for damage is a contested judgement about how the customer
+      handled the goods, not a verifiable fact, and the customer is likely to
+      dispute it.
 
-  - guideline_id: G-BUS-003
+  - guideline_id: G-BUS-002
     risk_category: BUSINESS_RISK
+    source: Company policy
     text: >
-      If the customer expresses strong dissatisfaction, anger, or an intention
-      to end the business relationship, and the decision being communicated is
-      a denial, route the case to human review.
+      If the customer is unhappy and has a good record with us — orders over time,
+      no fraud flags, few or no previous refunds — route a denial to human review
+      before it is sent. Keeping the relationship is worth more than the amount in
+      dispute. This does not apply to customers with little history or frequent
+      refund claims.
 
   - guideline_id: G-AUTO-001
     risk_category: NONE
+    source: Company policy
     text: >
-      A refund approval that is consistent with the policy decision, supported
-      by complete system facts, and free of personal identifiers, legal
-      escalation, or fraud indicators may be sent automatically.
+      A refund approval that matches the business decision, is supported by
+      complete facts, and contains no personal identifiers, legal escalation, or
+      fraud indicators may be sent automatically.
 
   - guideline_id: G-AUTO-002
     risk_category: NONE
+    source: Company policy
     text: >
-      A request for further information may be sent automatically when it
-      matches the policy decision, discloses no personal data beyond what the
-      customer already provided, and the account carries no risk flags.
-
-  - guideline_id: G-AUTO-003
-    risk_category: NONE
-    text: >
-      A refund denial may be sent automatically when the reason is
-      concrete verifiable from system facts — such as a clearly expired
-      return window — the order value is below the high-value threshold, and the
+      A refund denial may be sent automatically when the reason is verifiable
+      from the recorded facts — such as a clearly expired return window — and the
       message contains no legal, fraud, or personal-data indicators.

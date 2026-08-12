@@ -25,6 +25,7 @@ class RiskCategory(str, Enum):
 class PolicyDecision(str, Enum):
 
     APPROVE_REFUND = "APPROVE_REFUND"
+    PARTIAL_REFUND = "PARTIAL_REFUND"
     DENY_REFUND = "DENY_REFUND"
     REQUEST_INFO = "REQUEST_INFO"
 
@@ -42,13 +43,30 @@ class Guideline(BaseModel):
     guideline_id: str
     text: str
     risk_category: RiskCategory
+    # Where the rule comes from — a regulation, or our own operational policy.
+    # Documentation only; not shown to the model.
+    source: str = ""
+
+
+class Category(str, Enum):
+
+    CLOTHING = "clothing"
+    ELECTRONICS = "electronics"
+
+
+class ReturnCondition(str, Enum):
+
+    ACCEPTABLE = "acceptable"
+    DAMAGED = "damaged"
 
 
 class SystemFacts(BaseModel):
-
     order_id: str | None = None
     order_status: str | None = None
-    return_window_days_remaining: int | None = None
+    category: Category | None = None
+    delivered_days_ago: int | None = None
+    is_faulty: bool = False
+    return_condition: ReturnCondition | None = None
     order_value_eur: float | None = None
     account_flags: list[str] = Field(default_factory=list)
 

@@ -1,42 +1,58 @@
 orders:
-  A-01:
+  A-01:                          # blue jacket, returned and inspected
     order_status: RETURN_RECEIVED
-    return_window_days_remaining: 12
+    category: clothing
+    delivered_days_ago: 18
+    is_faulty: false
+    return_condition: acceptable
     order_value_eur: 74.90
     account_flags: []
 
-  A-02:
+  A-02:                          # desk lamp
     order_status: DELIVERED
-    return_window_days_remaining: -58
+    category: electronics
+    delivered_days_ago: 88
+    is_faulty: false
     order_value_eur: 32.00
     account_flags: []
 
-  A-03:
+  A-03:                          # returned and inspected
     order_status: RETURN_RECEIVED
-    return_window_days_remaining: 8
+    category: clothing
+    delivered_days_ago: 22
+    is_faulty: false
+    return_condition: acceptable
     order_value_eur: 129.00
     account_flags: []
 
-  A-04:
-    order_status: DELIVERED_DAMAGED
-    return_window_days_remaining: 4
+  A-04:                          # arrived damaged
+    order_status: DELIVERED
+    category: electronics
+    delivered_days_ago: 26
+    is_faulty: true
     order_value_eur: 215.00
     account_flags: []
 
-  A-05:
+  A-05:                          # headphones
     order_status: DELIVERED
-    return_window_days_remaining: -3
+    category: electronics
+    delivered_days_ago: 18
+    is_faulty: false
     order_value_eur: 59.99
     account_flags: []
 
-  A-06:
+  A-06:                          # wrong size
     order_status: DELIVERED
-    return_window_days_remaining: 16
+    category: clothing
+    delivered_days_ago: 14
+    is_faulty: false
     order_value_eur: 45.00
     account_flags: []
 
-  A-07:
+  A-07:                          # mobility item, bereavement case
     order_status: DELIVERED
-    return_window_days_remaining: -71
+    category: electronics
+    delivered_days_ago: 101
+    is_faulty: false
     order_value_eur: 88.50
     account_flags: []

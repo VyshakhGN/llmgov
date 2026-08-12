@@ -10,15 +10,11 @@ from .schemas import Case, Guideline, SystemFacts
 @dataclass(frozen=True)
 class GuidelineCorpus:
     guidelines: list[Guideline]
-    high_order_value_eur: float
 
 
 def load_guidelines(path: str | Path) -> GuidelineCorpus:
     doc = _read_yaml(path)
-    return GuidelineCorpus(
-        guidelines=[Guideline(**g) for g in doc["guidelines"]],
-        high_order_value_eur=doc["high_order_value_eur"],
-    )
+    return GuidelineCorpus(guidelines=[Guideline(**g) for g in doc["guidelines"]])
 
 
 def load_orders(path: str | Path) -> dict[str, SystemFacts]:

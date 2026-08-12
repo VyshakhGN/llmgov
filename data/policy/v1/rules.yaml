@@ -1,16 +1,51 @@
+# 30 days is the usual window for major retailers like Zalando and MediaMarkt.
+# Electronics sometimes get less: Apple and Sony in Germany both stay at the
+# statutory 14 days, so we use a shorter window for that category.
+# The statutory floor is the 14-day withdrawal right, Consumer Rights Directive
+# 2011/83/EU Art. 9 — every window here meets or exceeds it.
+#
+# Faulty goods are handled separately under the two-year legal guarantee in
+# Directive 2019/771, so they are refundable regardless of the return window.
+#
+# Customers may try an item as they would in a shop. If it comes back damaged,
+# they still get a refund, just a reduced one. 2011/83/EU Art. 14(2) allows a
+# deduction for lost value; the 50% figure is our own policy.
+
+return_windows:
+  clothing: 30
+  electronics: 14
+
+damaged_return_deduction_pct: 50
+
 rules:
   - when: no_order_found
     decision: REQUEST_INFO
-    because: Need the order info.
+    because: No order could be identified from the request.
 
-  - when: return_window_unknown
+  - when: delivery_date_unknown
     decision: REQUEST_INFO
-    because: Delivery date missing, so the window cannot be checked.
+    because: Delivery date is missing, so the return window cannot be checked.
+
+  - when: category_unknown
+    decision: REQUEST_INFO
+    because: Product category is unknown, so no return window applies.
+
+  - when: item_faulty
+    decision: APPROVE_REFUND
+    because: Faulty goods are covered by the statutory guarantee regardless of the window.
+    source: Directive 2019/771 (legal guarantee, two years)
+
+  - when: return_damaged
+    decision: PARTIAL_REFUND
+    because: >
+      The item came back damaged, so the refund is reduced by the loss in value.
+    source: Directive 2011/83/EU Art. 14(2) allows the deduction; 50% is company policy
 
   - when: within_return_window
     decision: APPROVE_REFUND
-    because: Inside the standard return period.
+    because: Inside the return window for this product category.
+    source: Directive 2011/83/EU Art. 9 (14-day minimum); windows follow German market practice (Zalando, MediaMarkt)
 
   - when: outside_return_window
     decision: DENY_REFUND
-    because: The return period is over.
+    because: The return window for this product category has passed.
