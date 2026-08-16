@@ -137,10 +137,7 @@ That field never feeds into the case itself.
 
 ## Future Work
 
-Still to come: a UI on a FastAPI backend, one page for browsing cases and one for
-the review queue that flagged replies should actually land in. Rules and
-guidelines read out of real retailer policy documents instead of transcribed by
-hand. More cases. Fine-tuning the router and comparing it against retrieval,
-which is the main experiment. Letting the router bounce a bad draft back to be
-rewritten rather than escalating it straight to a person. Splitting the
-components into separate services, eventually.
+Several enhancements are planned, including a UI with a FastAPI backend for
+browsing cases and working through the review queue, a larger case set,
+fine-tuning the model and comparing it against retrieval, and eventually
+splitting the components into separate services. Stay tuned!
