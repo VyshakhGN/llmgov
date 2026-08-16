@@ -2,8 +2,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from .drafting import Drafter
+from .extraction import OrderExtractor
 from .evaluation import format_report, new_run_id, run_cases, score, write_traces
-from .loading import load_cases, load_guidelines, load_orders
+from .loading import load_cases, load_customers, load_guidelines, load_orders
 from .policy import load_policy
 from .routing import LlmRouter, check_available
 from .routing.base import Router
@@ -13,6 +15,7 @@ from .schemas import Mode
 DEFAULT_GUIDELINES = Path("data/guidelines/v1/guidelines.yaml")
 DEFAULT_CASES = Path("data/cases/v0.yaml")
 DEFAULT_ORDERS = Path("data/orders/v0.yaml")
+DEFAULT_CUSTOMERS = Path("data/customers/v0.yaml")
 DEFAULT_POLICY = Path("data/policy/v1/rules.yaml")
 DEFAULT_MODEL = "qwen3.5:4b"
 RUNS_DIR = Path("runs")
@@ -75,6 +78,13 @@ def main() -> None:
     )
     run.add_argument("--cases", type=Path, default=DEFAULT_CASES)
     run.add_argument("--orders", type=Path, default=DEFAULT_ORDERS)
+    run.add_argument("--customers", type=Path, default=DEFAULT_CUSTOMERS)
+    run.add_argument(
+        "--no-extract",
+        action="store_true",
+        help="take the order id from the case file instead of reading it from "
+        "the customer's message",
+    )
     run.add_argument("--policy", type=Path, default=DEFAULT_POLICY)
     run.add_argument("--guidelines", type=Path, default=DEFAULT_GUIDELINES)
     run.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
@@ -83,13 +93,23 @@ def main() -> None:
     if args.command != "run":
         parser.error("unknown command")
 
-    orders = load_orders(args.orders)
+    orders = load_orders(args.orders, load_customers(args.customers))
     policy = load_policy(args.policy)
     cases = load_cases(args.cases, orders, policy)
     router = build_router(args.mode, args.guidelines, args.model, args.think, args.top_k)
     run_id = new_run_id(args.mode, args.runs_dir)
 
-    traces = run_cases(cases, router, run_id)
+    drafter = Drafter(model_name=args.model, policy=policy)
+    extractor = None if args.no_extract else OrderExtractor(model_name=args.model)
+    traces = run_cases(
+        cases,
+        router,
+        run_id,
+        policy=policy,
+        drafter=drafter,
+        extractor=extractor,
+        orders=orders,
+    )
     metrics = score(traces)
 
     out = args.runs_dir / run_id

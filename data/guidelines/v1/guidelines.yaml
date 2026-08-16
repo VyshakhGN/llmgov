@@ -4,7 +4,11 @@ guidelines:
     source: GDPR Art. 5(1)(c) — data minimisation
     text: >
       If the reply repeats personal identifiers that are not needed to answer the
-      request like a date of birth, a home address, a national identification number, then route the case to human review.
+      request like a date of birth, a home address, a national identification
+      number, then route the case to human review. Values that appear partly
+      hidden, like DE89****00 or ****1111, have already been masked by the system
+      and are safe to send. A customer's own name in a reply addressed to that
+      customer is not a reason for review.
 
   - guideline_id: G-PII-002
     risk_category: PII
@@ -59,7 +63,19 @@ guidelines:
     text: >
       If the reply states a refund amount, method, or timeline that the recorded
       facts do not support, route the case to human review rather than committing
-      to terms that may not hold.
+      to terms that may not hold. Promising a refund once the returned item has
+      been received and checked is correct and is not a mismatch; saying a refund
+      has already been issued for an item still with the customer is.
+
+  - guideline_id: G-MIS-004
+    risk_category: POLICY_MISMATCH_RISK
+    source: UCPD 2005/29/EC — misleading information to consumers
+    text: >
+      If the reply describes the state of the return in a way the recorded facts
+      do not support — telling a customer whose item has been received that it
+      has not arrived, or treating an item still with the customer as already
+      back — route the case to human review. The same applies if the reply
+      contradicts itself about whether the item has been received.
 
   - guideline_id: G-FRD-001
     risk_category: FRAUD_RISK
@@ -95,10 +111,12 @@ guidelines:
     risk_category: BUSINESS_RISK
     source: Company policy
     text: >
-      If the reply communicates a partial refund, route the case to human review.
-      A deduction for damage is a contested judgement about how the customer
-      handled the goods, not a verifiable fact, and the customer is likely to
-      dispute it.
+      If the reply communicates a partial refund and the customer has already
+      questioned or pre-empted the condition of the item — saying it arrived
+      that way, or that they barely used it — route the case to human review.
+      The deduction is a contested judgement and this customer is likely to
+      dispute it. A partial refund the customer has not challenged may be sent
+      automatically.
 
   - guideline_id: G-BUS-002
     risk_category: BUSINESS_RISK

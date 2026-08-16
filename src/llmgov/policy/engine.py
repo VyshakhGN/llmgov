@@ -22,10 +22,12 @@ class PolicyEngine:
         rules: list[dict[str, str]],
         return_windows: dict[str, int],
         damaged_return_deduction_pct: float = 0.0,
+        refund_processing_days: int | None = None,
     ) -> None:
         self.rules = rules
         self.return_windows = return_windows
         self.damaged_return_deduction_pct = damaged_return_deduction_pct
+        self.refund_processing_days = refund_processing_days
         self.checks: dict[str, Callable[[SystemFacts], bool]] = {
             "no_order_found": lambda f: f.order_id is None,
             "delivery_date_unknown": lambda f: f.delivered_days_ago is None,
@@ -46,10 +48,16 @@ class PolicyEngine:
             return round(facts.order_value_eur * kept, 2)
         return None
 
+    def window_for(self, facts: SystemFacts) -> int | None:
+        """The return window that applies, or None if the category is unknown."""
+        if facts.category is None:
+            return None
+        return self.return_windows.get(facts.category.value)
+
     def _window(self, facts: SystemFacts) -> int:
-        window = self.return_windows.get(facts.category.value)
+        window = self.window_for(facts)
         if window is None:
-            raise ValueError(f"no return window configured for {facts.category.value}")
+            raise ValueError(f"no return window configured for {facts.category}")
         return window
 
     def decide(self, facts: SystemFacts) -> PolicyOutcome:
@@ -79,4 +87,5 @@ def load_policy(path: str | Path) -> PolicyEngine:
         rules=doc["rules"],
         return_windows=doc["return_windows"],
         damaged_return_deduction_pct=doc.get("damaged_return_deduction_pct", 0.0),
+        refund_processing_days=doc.get("refund_processing_days"),
     )

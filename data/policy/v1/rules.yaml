@@ -11,11 +11,17 @@
 # they still get a refund, just a reduced one. 2011/83/EU Art. 14(2) allows a
 # deduction for lost value; the 50% figure is our own policy.
 
+# 2011/83/EU Art. 13 gives traders 14 days to reimburse once withdrawal is
+# notified. 5 working days is our own faster commitment, in line with what large
+# retailers advertise.
+
 return_windows:
   clothing: 30
   electronics: 14
 
 damaged_return_deduction_pct: 50
+
+refund_processing_days: 5
 
 rules:
   - when: no_order_found

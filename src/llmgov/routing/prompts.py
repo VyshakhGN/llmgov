@@ -50,6 +50,11 @@ delivered: {_fmt(f.delivered_days_ago)} days ago
 faulty on arrival: {"yes" if f.is_faulty else "no"}
 condition on return: {f.return_condition.value if f.return_condition else "not yet returned"}
 order value: {_fmt(f.order_value_eur)} EUR
+
+CUSTOMER:
+account age: {f"{f.customer_since_months} months" if f.customer_since_months is not None else "unknown"}
+orders placed: {_fmt(f.total_orders)}
+refunds in the last 12 months: {_fmt(f.refunds_last_12m)}
 account flags: {flags}
 
 BUSINESS DECISION: {case.policy_decision.value}

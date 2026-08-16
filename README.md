@@ -4,47 +4,53 @@ A RAG-LLM Routing Application for Human-in-the-Loop Customer-Service Automation
 
 ## What it does
 
-This is a prototype for an automated customer service system in online retail,
-handling refund and return requests. A customer writes asking about the status/possibility of refund from their order. The system looks up their order, applies the company's return policy
-to work out whether the refund is granted, and a reply is drafted. Before that
-reply goes out, this system decides whether it can be sent automatically or
-whether a person should read it first.
+A prototype customer service system for online retail, handling refunds and
+returns. Someone writes in about a refund. The system finds the order number in
+their message, looks it up, applies the return policy, and writes a reply. Then
+it decides whether that reply can go out on its own or needs a person to read it
+first.
 
-Sending everything automatically is risky. A reply might repeat the customer's
-bank details back to them, contradict the decision that was actually made, or
-refuse someone who has just said they are speaking to a lawyer. But having a
-person check every reply removes most of the benefit of automating. The question
-this project asks is which replies actually need a human.
+That last decision is what the project is actually about.
 
-So for each drafted reply the system returns one of two answers:
+Sending everything automatically is risky — a reply might quote the customer's
+bank details back at them, or refuse someone who has just mentioned their lawyer.
+Checking every reply by hand defeats the point of automating in the first place.
+So which ones actually need a human?
+
+For each draft the system answers:
 
 > AUTO_SEND, or NEEDS_REVIEW.
 
-It does not write the reply, and it does not decide the refund. It judges whether
-what has already been decided and drafted is safe to release.
+The part making that call doesn't write the reply and doesn't decide the refund.
+It only judges whether what has already been written is safe to send.
 
 ## Where the rules come from
 
-The return policy lives in a configuration file rather than in code: how long the
-return window is for each product category, how faulty goods are handled, when a
-refund is reduced instead of refused. It follows published European retail
-practice and the statutory minimums in the EU Consumer Rights Directive.
+The return policy sits in a config file rather than in code: window lengths per
+category, how faulty goods are handled, when a refund gets reduced instead of
+refused. The numbers follow published European retail practice, with the EU
+Consumer Rights Directive as the floor.
 
-Separately there is a set of routing guidelines saying when a reply should go to
-a person. Each one records where it came from, whether that is GDPR, the EU
-consumer dispute framework, or simply company policy where the rule is our own
-rather than a legal requirement.
+Routing guidelines are a separate thing. They say when a reply should go to a
+person. Each one records where it came from — GDPR, the EU consumer dispute
+framework, or "company policy" where we made the rule up ourselves. Roughly half
+are the latter, and the file says which.
 
 ## How a case flows through
 
 ```
-customer message + order id
+customer message
    ↓
-look up the order            status, category, days since delivery, value
+read the order number        an LLM pulls it out of the text
+   ↓
+look up the order            status, category, days since delivery, value,
+                             and the customer's history with us
    ↓
 policy engine                approve / partial / deny / request info
    ↓
-mask personal data           IBAN, card, email, phone become placeholders
+mask personal data           IBAN, card, email, phone partly hidden: DE89****00
+   ↓
+write the reply              an LLM drafts it from the masked facts
    ↓
 retrieve guidelines          the rules most relevant to this case
    ↓
@@ -53,15 +59,24 @@ LLM router                   AUTO_SEND or NEEDS_REVIEW, with a written reason
 enforce and record           the system acts, the model only advises
 ```
 
-Two decisions happen in different places, deliberately. The refund outcome is
-decided by plain rules with no LLM involved, because refunds carry legal and
-financial consequences and need to be consistent. Whether the reply
-is safe to send is decided by the LLM, using the retrieved guidelines.
+The policy engine is the one step with no model in it. Refunds carry legal and
+financial consequences, so they get plain rules that behave the same way every
+time. Whether a reply is safe to send is a judgement call, and that part is the
+LLM's job.
+
+If the order number is missing or wrong, the lookup comes back empty and the
+policy engine asks the customer for it. A model mistake costs someone a round
+trip. It can't hand them somebody else's order.
+
+There are two things the drafter deliberately can't see. One is the routing
+guidelines — a drafter that knows the rules writes replies that pass them, and
+then the router isn't measuring anything. The other is the customer's history. A
+fraud flag should change whether a human checks the reply, not how politely it's
+worded.
 
 ## Three modes
 
-The same router, differing only in how much of the guideline corpus it receives.
-Comparing them is the point of the research.
+The same router, changing only how much of the guideline corpus it gets.
 
 | Mode | Guidelines given |
 |---|---|
@@ -85,9 +100,9 @@ uv sync
 uv run llmgov run --mode rag
 ```
 
-Results are written to `runs/<n>-<mode>/`, with a full trace for every case and
-the scores. Runs are reproducible: temperature is zero and the seed is fixed, so
-the same input always gives the same decision.
+Results land in `runs/<n>-<mode>/` — a full trace for every case, plus the
+scores. Temperature is zero and the seed is fixed, so the same input gives the
+same decision every time.
 
 ## Layout
 
@@ -95,26 +110,37 @@ the same input always gives the same decision.
 data/
   cases/        test cases with a gold label, what a careful reviewer would decide
   orders/       order facts, keyed by order id
+  customers/    account age, orders placed, refund history, fraud flags
   policy/       the return policy, as configuration
   guidelines/   when a reply needs a human, with the source of each rule
 src/llmgov/
   policy/       the rule-based decision engine
   risk/         pattern detection and PII masking
+  extraction/   reads the order number out of the customer's message
+  drafting/     writes the reply from masked facts
   routing/      the router, its prompts, and guideline retrieval
   evaluation/   runs cases and scores them against the gold labels
 ```
 
 ## Evaluation
 
-Every decision is compared against a hand-written answer key. Two numbers matter
-most. False negatives are risky replies that were sent anyway, which is the
-error that causes real damage. The review rate is how much human work the system
-creates. Driving false negatives to zero is easy if you send everything to a
-person, but then nothing has been automated. Finding the balance is the research
-question.
+Every decision is checked against a hand-written answer key.
 
+Two numbers matter. False negatives are the risky replies that got sent anyway,
+which is the error that does real damage. Review rate is how much human work the
+system creates. You can drive false negatives to zero by sending everything to a
+person, but then nothing has been automated.
+
+Order extraction is scored on its own. Each case records which order it is really
+about, so whatever the model pulled out of the message can be checked against it.
+That field never feeds into the case itself.
 
 ## Future Work
-Many enhancements are planned for the future, including a nice UI with FastAPI backend, custom refund requests through the UI and LLM-generated
-drafts rather than hard-coded, customer history feeding the decision, a larger case set with guidelines and rules as PDF's, fine-tuning the model, and splitting the components into separate services, stay tuned!
 
+Still to come: a UI on a FastAPI backend, one page for browsing cases and one for
+the review queue that flagged replies should actually land in. Rules and
+guidelines read out of real retailer policy documents instead of transcribed by
+hand. More cases. Fine-tuning the router and comparing it against retrieval,
+which is the main experiment. Letting the router bounce a bad draft back to be
+rewritten rather than escalating it straight to a person. Splitting the
+components into separate services, eventually.

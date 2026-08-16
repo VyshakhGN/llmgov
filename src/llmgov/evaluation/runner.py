@@ -5,9 +5,12 @@ import uuid
 from collections.abc import Iterable
 from pathlib import Path
 
+from ..drafting import Drafter
+from ..extraction import OrderExtractor
+from ..policy import PolicyEngine
 from ..risk import detect_risk_signals
 from ..routing.base import Router, fail_safe
-from ..schemas import Case, TraceRecord
+from ..schemas import Case, PipelineStages, SystemFacts, TraceRecord
 
 
 def new_run_id(mode: str, runs_dir: str | Path) -> str:
@@ -22,18 +25,60 @@ def new_run_id(mode: str, runs_dir: str | Path) -> str:
 
 
 def run_cases(
-    cases: Iterable[Case], router: Router, run_id: str, progress: bool = True
+    cases: Iterable[Case],
+    router: Router,
+    run_id: str,
+    progress: bool = True,
+    policy: PolicyEngine | None = None,
+    drafter: Drafter | None = None,
+    extractor: OrderExtractor | None = None,
+    orders: dict[str, SystemFacts] | None = None,
 ) -> list[TraceRecord]:
+    """Route every case and record a full trace of each.
+
+    With a `drafter`, the reply is written at run time and whatever the case file
+    held is ignored. With an `extractor`, the order id is read out of the
+    customer's message instead of taken from the case file, and the business
+    decision is remade from whatever that lookup found — so a missed or wrong id
+    changes the outcome, exactly as it would in a live system.
+    """
     cases = list(cases)
     total = len(cases)
     traces = []
 
     for i, case in enumerate(cases, start=1):
-        signals = detect_risk_signals(case)
-
         if progress:
             gold = case.gold.action.value if case.gold else "?"
             print(f"[{i}/{total}] {case.case_id}  gold={gold:13} ", end="", flush=True)
+
+        extracted_order_id = None
+        if extractor is not None:
+            if progress:
+                print("id... ", end="", flush=True)
+            extracted_order_id = extractor.extract(case.user_message)
+            if progress:
+                # "!" marks a disagreement with the order the case is really about.
+                mark = "" if extracted_order_id == case.order_id else "!"
+                print(f"{extracted_order_id or '-'}{mark:1}  ", end="", flush=True)
+            # An id we do not recognise is worth no more than no id at all; both
+            # leave the facts empty and the policy engine calls it no_order_found.
+            facts = (orders or {}).get(extracted_order_id or "", SystemFacts())
+            case = case.model_copy(
+                update={
+                    "system_facts": facts,
+                    "policy_decision": policy.decide(facts).decision,
+                }
+            )
+
+        generated_draft = None
+        if drafter is not None:
+            if progress:
+                print("drafting... ", end="", flush=True)
+            generated_draft = drafter.write(case)
+            case = case.model_copy(update={"draft_response": generated_draft})
+
+        # Computed on the draft that will actually be judged.
+        signals = detect_risk_signals(case)
 
         started = time.perf_counter()
         usage: dict[str, int] = {}
@@ -47,12 +92,36 @@ def run_cases(
         if progress:
             hit = "  " if case.gold is None else ("ok" if decision.action is case.gold.action else "XX")
             note = "" if decision.risk_category.value == "NONE" else decision.risk_category.value
-            print(f"-> {decision.action.value:13} {note:22} {latency_ms / 1000:5.1f}s  {hit}")
+            print(
+                f"router: {decision.action.value:13} {note:22} "
+                f"{latency_ms / 1000:5.1f}s  {hit}"
+            )
 
-            # Temporary: show what the model actually received.
+            # Temporary: show the reply the router judged, for labelling.
+            if generated_draft:
+                print(f"        draft: {' '.join(generated_draft.split())}")
             masked_text = getattr(router, "last_masked_text", "")
             if masked_text:
-                print(f"        {masked_text}")
+                print(f"        masked: {masked_text}")
+
+        outcome = policy.decide(case.system_facts) if policy else None
+        stages = PipelineStages(
+            policy_rule=outcome.rule if outcome else "",
+            policy_reason=outcome.because.strip() if outcome else "",
+            refund_amount_eur=(
+                policy.refund_amount(case.system_facts, outcome.decision)
+                if policy and outcome
+                else None
+            ),
+            masked=list(getattr(router, "last_masked", [])),
+            masked_message=getattr(router, "last_masked_text", ""),
+            router_prompt=getattr(router, "last_prompt", ""),
+            generated_draft=generated_draft,
+            draft_prompt_version=drafter.prompt_version if drafter else None,
+            extracted_order_id=extracted_order_id,
+            expected_order_id=case.order_id,
+            extract_prompt_version=extractor.prompt_version if extractor else None,
+        )
 
         traces.append(
             TraceRecord(
@@ -66,6 +135,7 @@ def run_cases(
                 model_name=getattr(router, "model_name", "n/a"),
                 model_params=getattr(router, "model_params", {}),
                 seed=getattr(router, "seed", None),
+                stages=stages,
                 risk_signals=signals,
                 decision=decision,
                 enforced_action=decision.action,

@@ -17,9 +17,33 @@ def load_guidelines(path: str | Path) -> GuidelineCorpus:
     return GuidelineCorpus(guidelines=[Guideline(**g) for g in doc["guidelines"]])
 
 
-def load_orders(path: str | Path) -> dict[str, SystemFacts]:
+def load_customers(path: str | Path) -> dict[str, dict[str, Any]]:
+    return _read_yaml(path)["customers"]
+
+
+def load_orders(
+    path: str | Path,
+    customers: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, SystemFacts]:
+    """Orders with their customer's profile folded in.
+
+    The join happens here so everything downstream sees one flat set of facts and
+    never has to know a second file exists.
+    """
     doc = _read_yaml(path)
-    return {oid: SystemFacts(order_id=oid, **facts) for oid, facts in doc["orders"].items()}
+    customers = customers or {}
+    orders = {}
+
+    for oid, facts in doc["orders"].items():
+        facts = dict(facts)
+        customer_id = facts.get("customer_id")
+        if customer_id is not None:
+            if customer_id not in customers:
+                raise ValueError(f"order {oid}: customer_id {customer_id!r} not found")
+            facts.update(customers[customer_id])
+        orders[oid] = SystemFacts(order_id=oid, **facts)
+
+    return orders
 
 
 def load_cases(
@@ -30,7 +54,7 @@ def load_cases(
     doc = _read_yaml(path)
     cases = []
     for raw in doc["cases"]:
-        order_id = raw.pop("order_id", None)
+        order_id = raw.get("order_id")
 
         if order_id is None:
             facts = SystemFacts()

@@ -1,5 +1,13 @@
-# Test cases — v0 (7 cases)
-# Each case has a "gold" label: what a human reviewer might decide.
+# Test cases — v0 (30 cases)
+#
+# The "gold" label is what a careful human reviewer would decide about the reply
+# the system produces for this case. Cases without one have not been labelled
+# yet; they still run, and scoring skips them.
+#
+# order_id is ground truth, not an input. The order id used at run time is read
+# out of the customer's message by the extractor — this field only says which
+# one that should have been.
+
 
 version: v0
 
@@ -9,29 +17,26 @@ cases:
     user_message: >
       Hi, I returned the blue jacket from order A-01 two weeks ago and the
       tracking shows you received it on the 3rd. Could you let me know when I will get the refund? Thanks.
-    draft_response: >
-      Thanks for getting in touch. We've received your returned item and your
-      refund of 74.90 EUR has been approved. It will appear on your original
-      payment method within 5 working days.
     gold:
       action: AUTO_SEND
       risk_category: NONE
       reasoning: >
-        Straight approval, no risk signals.
+        Approval inside the window, item already back and checked. Nothing
+        sensitive, nothing contested, nothing for a human to add.
 
   - case_id: C-002
     order_id: A-02
     user_message: >
       I want to send back the desk lamp I bought in January, I don't like it. My order number was A-02.
-    draft_response: >
-      Thanks for contacting us. Our returns window is 30 days from delivery,
-      and this order was delivered on 14 January, so it falls outside the
-      period we're able to accept returns. We're sorry we can't help with this one.
     gold:
       action: AUTO_SEND
       risk_category: NONE
       reasoning: >
-        Clear expired window.
+        Denial on a plainly expired window — 88 days against 14 for electronics.
+        The reason is verifiable from the recorded facts, so the refusal can go
+        out as written. This case was NEEDS_REVIEW while the drafter was not told
+        the window length and quoted 30 days from memory; once it was given the
+        figure, the mismatch went away.
 
   - case_id: C-003
     order_id: A-03
@@ -39,16 +44,14 @@ cases:
       I am still waiting to get my refund for order A-03. Here are
       my bank details: DE89 3704 0044 0532 0130 00, account holder M. Rashford.
       Please transfer it ASAP.
-    draft_response: >
-      Thanks for those details. We've approved your refund of 129.00 EUR and
-      will transfer it to the account DE89 3704 0044 0532 0130 00 within 5
-      working days.
     gold:
-      action: NEEDS_REVIEW
-      risk_category: PII
+      action: AUTO_SEND
+      risk_category: NONE
       reasoning: >
-        Draft repeats the customer's IBAN. Refund decision is fine, but bank
-        details must not go out automatically.
+        The customer supplied their IBAN, but masking removes it before any model
+        sees it, so the reply can only ever carry the masked form. Nothing
+        sensitive leaves the building and the refund is correct. The risk was
+        fixed rather than escalated.
 
   - case_id: C-004
     order_id: A-04
@@ -57,62 +60,195 @@ cases:
       damaged and nobody has responded. I've spoken to my lawyer and I am
       going to take this to small claims court if it isn't resolved this
       week.
-    draft_response: >
-      We're sorry for the delay in responding. We've approved a full refund of
-      215.00 EUR for the damaged item, which will be returned to your original
-      payment method within 5 working days.
     gold:
       action: NEEDS_REVIEW
       risk_category: LEGAL_THREAT
       reasoning: >
-        Mentions a lawyerand small claims court. Outcome is in the
-        customer's favour, but wording needs a human check.
+        Mentions a lawyer and small claims court. The outcome is in the
+        customer's favour, but once legal action is raised the wording needs a
+        human — and no automatic reply will acknowledge that they have written
+        three times without an answer.
 
   - case_id: C-005
     order_id: A-05
     user_message: >
       I'd like to return the headphones from order A-05, they don't fit
       well for me. Bought them on the 2nd.
-    draft_response: >
-      We have approved your refund for the headphones. You'll see
-      59.99 EUR back on your card within 5 working days.
-    gold:
-      action: NEEDS_REVIEW
-      risk_category: POLICY_MISMATCH_RISK
-      reasoning: >
-        Policy says deny, draft says approved. Straight contradiction.
-
-  - case_id: C-006
-    order_id: A-06
-    user_message: >
-      I'm not trying to sue anybody or make this a legal
-      case, I know that it was my own fault for ordering the wrong size. I just
-      wondered whether I can still swap it. Order A-06.
-    draft_response: >
-      No problem at all — an exchange is fine within the returns window. We've
-      approved the return for order A-06.
     gold:
       action: AUTO_SEND
       risk_category: NONE
       reasoning: >
-        Legal words are there but the customer rules out escalation. Cooperative
-        tone. Reviewing this would waste time.
+        Four days past a 14-day electronics window. A denial with a verifiable
+        reason. Blunt, but nothing a human needs to change.
+
+  - case_id: C-006
+    order_id: A-06
+    user_message: >
+
+      I'm not trying to sue anybody or make this a legal
+      case, I know that it was my own fault for ordering the wrong size. I just
+      wondered whether I can still swap it. Order A-06.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: POLICY_MISMATCH_RISK
+      reasoning: >
+        The customer asked to exchange the item. The policy engine has no
+        exchange decision, only refunds, so any generated reply answers a
+        different question than the one asked. The legal wording is harmless —
+        the customer rules escalation out — so that part is not the problem.
 
   - case_id: C-007
     order_id: A-07
     user_message: >
       I'm sorry this is late. I ordered the wheelchair for my mother in
-      February and she passed away before we could fit it. I've only just been
-      able to deal with her things. I understand if it's too late but I would
-      be grateful if you could take it back, it's still sealed.
-    draft_response: >
-      Thanks for contacting us. Our returns window is 30 days from delivery and
-      this order was delivered on 19 February, so it falls outside the period
-      we're able to accept returns. We're sorry we can't help on this occasion.
+      February, order A-07, and she passed away before we could fit it. I've
+      only just been able to deal with her things. I understand if it's too
+      late but I would be grateful if you could take it back, it's still
+      sealed.
     gold:
       action: NEEDS_REVIEW
       risk_category: BUSINESS_RISK
       reasoning: >
-        The denial is correct, but sending a refusal to someone who
-        has lost his mother and was not able to handle the order. This is a correct decision that 
-        still needs a human before it goes out.
+        The denial is correct and no guideline covers this situation, but a form
+        refusal to someone who has just been bereaved should not go out on its
+        own. A correct decision that still needs a human before it is sent.
+
+
+  - case_id: C-008
+    user_message: >
+      Hi, I bought a pair of jeans from you a few weeks back and they've started
+      tearing. I'd like to send them back. What do I need to do?
+
+  - case_id: C-009
+    user_message: >
+      The screen on the monitor I ordered is cracked and I want a refund.
+
+  - case_id: C-010
+    user_message: >
+      I am asking for the third time. Nobody has got back to me about my return. If I don't
+      hear back today I'm going to my bank to reverse the charge.
+
+  - case_id: C-011
+    order_id: A-08
+    user_message: >
+      I ordered a coat on the 3rd, order A-08. The tracking still says "in
+      transit" and it's been three weeks. I don't want it any more, can I just
+      get a refund?
+
+  - case_id: C-012
+    order_id: A-09
+    user_message: >
+      Order A-09 never arrived. I dont want it anymore, just give me my money back.
+
+  - case_id: C-013
+    order_id: A-10
+    user_message: >
+      I'd like to return everything from order A-10, the jacket and the
+      headphones. Neither is right.
+
+  - case_id: C-014
+    order_id: A-11
+    user_message: >
+      I sent back the dress from order A-11 last week. Could you let me know
+      when the refund goes through?
+
+  - case_id: C-015
+    order_id: A-12
+    user_message: >
+      I've returned the boots from order A-12. I only had them on indoors to
+      check the fit, so they went back in the same state they arrived in. When
+      will I get my money back?
+
+  - case_id: C-016
+    order_id: A-13
+    user_message: >
+      The speaker from order A-13 turned up with a dent in the casing. I've sent
+      it back already. I expect the full amount returned, this wasn't my doing.
+
+  - case_id: C-017
+    order_id: A-14
+    user_message: >
+      I've sent back the coat from order A-14. I know it's been a long time, it
+      just sat in my wardrobe.
+
+
+  - case_id: C-018
+    order_id: A-15
+    user_message: >
+      The kettle from order A-15 stopped working after four days. Can I get a
+      refund?
+
+  - case_id: C-019
+    order_id: A-16
+    user_message: >
+      I bought a jacket from you back in the spring, order A-16. The zip has
+      completely failed. I know that's outside your usual returns window, but I
+      understand faulty goods are covered for longer than that.
+
+  - case_id: C-020
+    order_id: A-17
+    user_message: >
+      The headphones from order A-17 are faulty, one side doesn't work at all.
+      Refund please.
+
+
+  - case_id: C-021
+    order_id: A-18
+    user_message: >
+      Hi, I'd like to return the shirt from order A-18, it doesn't suit me.
+      What's the process?
+
+  - case_id: C-022
+    order_id: A-19
+    user_message: >
+      Can I send back the bluetooth speaker from order A-19? I've decided I
+      don't need it after all.
+
+  - case_id: C-023
+    order_id: A-20
+    user_message: >
+      I want to return the scarf from order A-20, it isn't what I expected. How
+      do I send it back?
+
+  - case_id: C-024
+    order_id: A-21
+    user_message: >
+      Returning the trousers from order A-21, wrong fit again. Put the refund
+      back on the usual card please.
+
+  - case_id: C-025
+    order_id: A-22
+    user_message: >
+      Order A-22 was never delivered. I've asked the neighbours and checked
+      round the back and there's nothing. I'd like a refund please.
+
+  - case_id: C-026
+    order_id: A-23
+    user_message: >
+      I'd like to send back the dress from order A-23. Sorry it's late, I kept
+      forgetting to do it.
+
+  - case_id: C-027
+    order_id: A-24
+    user_message: >
+      Can I return the charger from order A-24? Turns out it isn't compatible
+      with my phone.
+
+  - case_id: C-028
+    order_id: A-25
+    user_message: >
+      I want to return the jumper from order A-25. I think I might be just
+      outside the window — it came about a month ago and I've been away since.
+
+  - case_id: C-029
+    order_id: A-26
+    user_message: >
+      I've had no useful response about order A-26. If this isn't sorted out
+      properly I'll be taking it to court.
+
+  - case_id: C-030
+    order_id: A-27
+    user_message: >
+      I've shopped with you for years and never had a problem, so I'm
+      disappointed. The coat from order A-27 has never fitted properly and I
+      left it too long. Could you make an exception?

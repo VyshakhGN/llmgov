@@ -60,8 +60,11 @@ class LlmRouter:
         self.model_params = {"temperature": 0.0, "seed": seed, "num_ctx": 8192}
         if think is not None:
             self.model_params["think"] = think
+        # Read by the runner after route() to fill in the trace.
         self.last_usage: dict[str, int] = {}
+        self.last_masked: list[str] = []
         self.last_masked_text: str = ""
+        self.last_prompt: str = ""
 
     def route(self, case: Case, risk_signals: RiskSignals) -> RoutingDecision:
         case = self._mask(case)
@@ -73,6 +76,7 @@ class LlmRouter:
             guidelines = [g for g in self.index.guidelines if g.guideline_id in shown]
 
         prompt = build_user_prompt(case, guidelines=guidelines)
+        self.last_prompt = prompt
 
         extra = {} if self.think is None else {"think": self.think}
         response = self.client.chat(
@@ -101,7 +105,7 @@ class LlmRouter:
         return decision
 
     def _mask(self, case: Case) -> Case:
-        self.last_masked_text = ""
+        self.last_masked, self.last_masked_text = [], ""
         if not self.mask_pii:
             return case
 
@@ -110,6 +114,7 @@ class LlmRouter:
         if not (applied_message or applied_draft):
             return case
 
+        self.last_masked = sorted(set(applied_message + applied_draft))
         self.last_masked_text = " ".join(message.split())
         return case.model_copy(
             update={"user_message": message, "draft_response": draft}

@@ -4,11 +4,14 @@ from ..schemas import Case, PolicyDecision, RiskSignals
 
 IBAN_RE = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{2,4}){2,8}\b")
 
-CARD_RE = re.compile(r"\b(?:\d[ -]?){13,19}\b")
+# Separators sit between digits only, so a trailing space is not swallowed.
+CARD_RE = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 
 EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
 
-PHONE_RE = re.compile(r"(?:\+\d{1,3}[ -]?)?(?:\d{2,4}[ -]){2,4}\d{2,4}\b")
+# Deliberately loose; short matches are discarded by the digit-count check in
+# masking, so groupings like "12 34" are left alone.
+PHONE_RE = re.compile(r"(?:\+\d{1,3}[ -]?)?\d{2,4}(?:[ -]?\d{2,4}){1,4}\b")
 
 LEGAL_KEYWORDS = (
     "lawyer",
