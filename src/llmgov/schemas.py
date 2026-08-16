@@ -43,8 +43,6 @@ class Guideline(BaseModel):
     guideline_id: str
     text: str
     risk_category: RiskCategory
-    # Where the rule comes from — a regulation, or our own operational policy.
-    # Documentation only; not shown to the model.
     source: str = ""
 
 
@@ -68,8 +66,6 @@ class SystemFacts(BaseModel):
     is_faulty: bool = False
     return_condition: ReturnCondition | None = None
     order_value_eur: float | None = None
-    # Joined from the customers file at load time. Flags belong to the account,
-    # not the order, so they arrive here with the rest of the profile.
     customer_id: str | None = None
     customer_since_months: int | None = None
     total_orders: int | None = None
@@ -103,12 +99,8 @@ class Case(BaseModel):
 
     case_id: str
     user_message: str
-    # The order this case is really about. Used to build the facts when nothing
-    # extracts the id from the message, and to score the extractor when
-    # something does.
     order_id: str | None = None
     policy_decision: PolicyDecision
-    # Empty when the drafter writes it at run time, which is the normal path.
     draft_response: str = ""
     system_facts: SystemFacts = Field(default_factory=SystemFacts)
 
@@ -146,31 +138,19 @@ class HumanReview(BaseModel):
 
 
 class PipelineStages(BaseModel):
-    """What happened at each step, so a decision can be replayed later.
-
-    The audit trail: for any case you can see what the policy decided and why,
-    what was masked, what the model was asked, and what it wrote.
-    """
 
     policy_rule: str = ""
     policy_reason: str = ""
     refund_amount_eur: float | None = None
 
-    # Placeholders applied, e.g. ["<IBAN>"]. Never the values themselves.
     masked: list[str] = Field(default_factory=list)
     masked_message: str = ""
 
-    # Present when the drafter wrote the reply rather than it coming from the
-    # case file — after which this is the only record of it.
     generated_draft: str | None = None
     draft_prompt_version: str | None = None
 
-    # What the router was actually sent.
     router_prompt: str = ""
 
-    # Order id read out of the message, and the one the case says is correct.
-    # Equal means the extractor got it right; both empty is also right when the
-    # customer never gave one.
     extracted_order_id: str | None = None
     expected_order_id: str | None = None
     extract_prompt_version: str | None = None

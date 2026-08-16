@@ -3,11 +3,6 @@
 # The "gold" label is what a careful human reviewer would decide about the reply
 # the system produces for this case. Cases without one have not been labelled
 # yet; they still run, and scoring skips them.
-#
-# order_id is ground truth, not an input. The order id used at run time is read
-# out of the customer's message by the extractor — this field only says which
-# one that should have been.
-
 
 version: v0
 

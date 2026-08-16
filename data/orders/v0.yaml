@@ -1,11 +1,5 @@
-# Order records, as a warehouse and order system would hold them.
-#
-# customer_id points at data/customers/v0.yaml. The profile is folded in when
-# the orders load, so the rest of the program sees one flat set of facts.
-# Account flags live on the customer, not here — they describe the account.
-
 orders:
-  A-01:                          # blue jacket, returned and inspected
+  A-01:                          
     customer_id: CU-01
     order_status: RETURN_RECEIVED
     category: clothing
@@ -14,7 +8,7 @@ orders:
     return_condition: acceptable
     order_value_eur: 74.90
 
-  A-02:                          # desk lamp
+  A-02:                          
     customer_id: CU-02
     order_status: DELIVERED
     category: electronics
@@ -22,7 +16,7 @@ orders:
     is_faulty: false
     order_value_eur: 32.00
 
-  A-03:                          # returned and inspected
+  A-03:                          
     customer_id: CU-03
     order_status: RETURN_RECEIVED
     category: clothing
@@ -31,7 +25,7 @@ orders:
     return_condition: acceptable
     order_value_eur: 129.00
 
-  A-04:                          # arrived damaged
+  A-04:                         
     customer_id: CU-04
     order_status: DELIVERED
     category: electronics
@@ -39,7 +33,7 @@ orders:
     is_faulty: true
     order_value_eur: 215.00
 
-  A-05:                          # headphones
+  A-05:                         
     customer_id: CU-05
     order_status: DELIVERED
     category: electronics
@@ -47,7 +41,7 @@ orders:
     is_faulty: false
     order_value_eur: 59.99
 
-  A-06:                          # wrong size
+  A-06:                          
     customer_id: CU-06
     order_status: DELIVERED
     category: clothing
@@ -55,7 +49,7 @@ orders:
     is_faulty: false
     order_value_eur: 45.00
 
-  A-07:                          # mobility item, bereavement case
+  A-07:                          
     customer_id: CU-07
     order_status: DELIVERED
     category: electronics
@@ -63,7 +57,7 @@ orders:
     is_faulty: false
     order_value_eur: 88.50
 
-  A-08:                          # coat, still in transit — no delivery date
+  A-08:                          
     customer_id: CU-08
     order_status: IN_TRANSIT
     category: clothing
@@ -71,7 +65,7 @@ orders:
     is_faulty: false
     order_value_eur: 119.00
 
-  A-09:                          # never arrived — no delivery date
+  A-09:                          
     customer_id: CU-09
     order_status: IN_TRANSIT
     category: electronics
@@ -79,8 +73,7 @@ orders:
     is_faulty: false
     order_value_eur: 64.50
 
-  A-10:                          # jacket and headphones together, so no single
-                                 # category and no single return window
+  A-10:                         
     customer_id: CU-10
     order_status: DELIVERED
     category: null
@@ -88,7 +81,7 @@ orders:
     is_faulty: false
     order_value_eur: 173.00
 
-  A-11:                          # dress, came back marked
+  A-11:                          
     customer_id: CU-11
     order_status: RETURN_RECEIVED
     category: clothing
@@ -97,7 +90,7 @@ orders:
     return_condition: damaged
     order_value_eur: 89.00
 
-  A-12:                          # boots, worn soles
+  A-12:                          
     customer_id: CU-12
     order_status: RETURN_RECEIVED
     category: clothing
@@ -106,8 +99,7 @@ orders:
     return_condition: damaged
     order_value_eur: 145.00
 
-  A-13:                          # speaker, dented casing; recorded as damaged on
-                                 # return, not faulty on arrival
+  A-13:                        
     customer_id: CU-13
     order_status: RETURN_RECEIVED
     category: electronics
@@ -116,7 +108,7 @@ orders:
     return_condition: damaged
     order_value_eur: 210.00
 
-  A-14:                          # coat returned damaged long after the window
+  A-14:                         
     customer_id: CU-14
     order_status: RETURN_RECEIVED
     category: clothing
@@ -125,7 +117,7 @@ orders:
     return_condition: damaged
     order_value_eur: 130.00
 
-  A-15:                          # kettle, failed in use
+  A-15:                          
     customer_id: CU-15
     order_status: DELIVERED
     category: electronics
@@ -133,7 +125,7 @@ orders:
     is_faulty: true
     order_value_eur: 45.00
 
-  A-16:                          # jacket, zip failed months after delivery
+  A-16:                          
     customer_id: CU-16
     order_status: DELIVERED
     category: clothing
@@ -141,7 +133,7 @@ orders:
     is_faulty: true
     order_value_eur: 99.00
 
-  A-17:                          # faulty headphones on a flagged account
+  A-17:                         
     customer_id: CU-17
     order_status: DELIVERED
     category: electronics
@@ -149,7 +141,7 @@ orders:
     is_faulty: true
     order_value_eur: 79.00
 
-  A-18:                          # shirt, plain return inside the window
+  A-18:                          
     customer_id: CU-18
     order_status: DELIVERED
     category: clothing
@@ -157,7 +149,7 @@ orders:
     is_faulty: false
     order_value_eur: 62.00
 
-  A-19:                          # speaker, plain return inside the window
+  A-19:                          
     customer_id: CU-19
     order_status: DELIVERED
     category: electronics
@@ -165,7 +157,7 @@ orders:
     is_faulty: false
     order_value_eur: 139.00
 
-  A-20:                          # scarf, plain return inside the window
+  A-20:                          
     customer_id: CU-20
     order_status: DELIVERED
     category: clothing
@@ -173,7 +165,7 @@ orders:
     is_faulty: false
     order_value_eur: 54.00
 
-  A-21:                          # trousers, on an account that refunds constantly
+  A-21:                          
     customer_id: CU-21
     order_status: DELIVERED
     category: clothing
@@ -181,8 +173,7 @@ orders:
     is_faulty: false
     order_value_eur: 78.00
 
-  A-22:                          # recorded as delivered; the customer says
-                                 # otherwise
+  A-22:                     
     customer_id: CU-22
     order_status: DELIVERED
     category: electronics
@@ -190,7 +181,7 @@ orders:
     is_faulty: false
     order_value_eur: 95.00
 
-  A-23:                          # dress, well past the window
+  A-23:                         
     customer_id: CU-23
     order_status: DELIVERED
     category: clothing
@@ -198,7 +189,7 @@ orders:
     is_faulty: false
     order_value_eur: 110.00
 
-  A-24:                          # charger, well past the window
+  A-24:                          
     customer_id: CU-24
     order_status: DELIVERED
     category: electronics
@@ -206,7 +197,7 @@ orders:
     is_faulty: false
     order_value_eur: 42.00
 
-  A-25:                          # jumper, one day past the 30-day window
+  A-25:                         
     customer_id: CU-25
     order_status: DELIVERED
     category: clothing
@@ -214,7 +205,7 @@ orders:
     is_faulty: false
     order_value_eur: 85.00
 
-  A-26:                          # past the window, customer raising a regulator
+  A-26:                          
     customer_id: CU-26
     order_status: DELIVERED
     category: electronics
@@ -222,7 +213,7 @@ orders:
     is_faulty: false
     order_value_eur: 320.00
 
-  A-27:                          # past the window, on a five-year account
+  A-27:                         
     customer_id: CU-27
     order_status: DELIVERED
     category: clothing

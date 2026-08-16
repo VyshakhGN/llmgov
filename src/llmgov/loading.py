@@ -25,11 +25,6 @@ def load_orders(
     path: str | Path,
     customers: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, SystemFacts]:
-    """Orders with their customer's profile folded in.
-
-    The join happens here so everything downstream sees one flat set of facts and
-    never has to know a second file exists.
-    """
     doc = _read_yaml(path)
     customers = customers or {}
     orders = {}

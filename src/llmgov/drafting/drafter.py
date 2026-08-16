@@ -1,11 +1,3 @@
-"""Writes the customer reply, given a decision that has already been made.
-
-Runs on masked text, so it never sees a real IBAN or card number and therefore
-cannot put one in a reply. The refund amount and the return window are passed in
-rather than worked out, so the model has no opportunity to invent a figure — an
-earlier version was told neither and quoted a plausible-sounding 30 days.
-"""
-
 from __future__ import annotations
 
 import ollama
@@ -54,13 +46,10 @@ class Drafter:
                         amount,
                         window,
                         self.policy.refund_processing_days,
+                        outcome.rule,
                     ),
                 },
             ],
-            # Reasoning models otherwise spend the whole budget thinking and
-            # return an empty reply. A JSON schema does not prevent this; the
-            # router survives only because its larger budget leaves room to
-            # think and still answer.
             think=False,
             options={
                 "temperature": 0.0,

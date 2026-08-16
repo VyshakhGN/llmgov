@@ -105,7 +105,6 @@ def score(traces: Sequence[TraceRecord]) -> Metrics:
 
 
 def format_report(m: Metrics, mode: str) -> str:
-    """Human-readable summary for the terminal."""
     lines = [
         f"mode: {mode}    cases: {m.n}",
         "",

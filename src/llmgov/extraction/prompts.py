@@ -1,11 +1,3 @@
-"""Prompt for pulling an order number out of a customer's message.
-
-Deliberately the narrowest job in the pipeline. The extractor does not decide
-anything, does not see the policy, and does not know which orders exist — it
-reads text and reports what it found. Whether the number is real is settled
-afterwards, by looking it up.
-"""
-
 from __future__ import annotations
 
 PROMPT_VERSION = "extract-v2"

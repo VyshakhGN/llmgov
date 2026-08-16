@@ -1,14 +1,3 @@
-# Customer profiles, joined onto the order at load time.
-#
-# Two guidelines read this and nothing else can reach them: G-FRD-002 asks
-# whether someone has claimed an unusual number of refunds, and G-BUS-002 asks
-# whether an unhappy customer has a good record worth protecting. Neither means
-# anything unless good and bad records both exist to be told apart, so most
-# profiles here are ordinary on purpose.
-#
-# account_flags is what a fraud or payments team would have set. Everything else
-# is counted from the account itself.
-
 customers:
   CU-01: {customer_since_months: 34, total_orders: 22, refunds_last_12m: 1, account_flags: []}
   CU-02: {customer_since_months:  8, total_orders:  3, refunds_last_12m: 0, account_flags: []}
@@ -17,8 +6,6 @@ customers:
   CU-05: {customer_since_months:  5, total_orders:  2, refunds_last_12m: 1, account_flags: []}
   CU-06: {customer_since_months: 27, total_orders: 15, refunds_last_12m: 0, account_flags: []}
 
-  # Bereavement case. A long-standing account with almost no refund history —
-  # exactly the record G-BUS-002 exists to notice.
   CU-07: {customer_since_months: 62, total_orders: 31, refunds_last_12m: 1, account_flags: []}
 
   CU-08: {customer_since_months: 14, total_orders:  6, refunds_last_12m: 0, account_flags: []}
@@ -31,16 +18,12 @@ customers:
   CU-15: {customer_since_months: 16, total_orders:  7, refunds_last_12m: 0, account_flags: []}
   CU-16: {customer_since_months: 38, total_orders: 24, refunds_last_12m: 2, account_flags: []}
 
-  # Short tenure, heavy ordering, refunds on most of it, and a payments flag.
   CU-17: {customer_since_months:  4, total_orders: 11, refunds_last_12m: 7, account_flags: [chargeback_history]}
 
   CU-18: {customer_since_months: 25, total_orders: 14, refunds_last_12m: 1, account_flags: []}
   CU-19: {customer_since_months:  7, total_orders:  4, refunds_last_12m: 0, account_flags: []}
   CU-20: {customer_since_months: 33, total_orders: 20, refunds_last_12m: 2, account_flags: []}
 
-  # Refunds on roughly half of everything ordered, but nobody has flagged the
-  # account. G-FRD-002 has to notice this on its own; if a flag were set here,
-  # G-FRD-001 would fire first and we could not tell which guideline caught it.
   CU-21: {customer_since_months: 11, total_orders: 19, refunds_last_12m: 9, account_flags: []}
 
   CU-22: {customer_since_months:  6, total_orders:  3, refunds_last_12m: 1, account_flags: []}
@@ -49,6 +32,4 @@ customers:
   CU-25: {customer_since_months: 44, total_orders: 33, refunds_last_12m: 2, account_flags: []}
   CU-26: {customer_since_months: 18, total_orders: 10, refunds_last_12m: 1, account_flags: []}
 
-  # Five years, forty-four orders, never asked for money back. The clearest
-  # "good record" in the file, and the counterweight to CU-21.
   CU-27: {customer_since_months: 58, total_orders: 44, refunds_last_12m: 0, account_flags: []}
