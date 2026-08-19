@@ -41,6 +41,10 @@ rules:
     because: Faulty goods are covered by the statutory guarantee regardless of the window.
     source: Directive 2019/771 (legal guarantee, two years)
 
+  - when: outside_return_window
+    decision: DENY_REFUND
+    because: The return window for this product category has passed.
+
   - when: return_damaged
     decision: PARTIAL_REFUND
     because: >
@@ -51,7 +55,3 @@ rules:
     decision: APPROVE_REFUND
     because: Inside the return window for this product category.
     source: Directive 2011/83/EU Art. 9 (14-day minimum); windows follow German market practice (Zalando, MediaMarkt)
-
-  - when: outside_return_window
-    decision: DENY_REFUND
-    because: The return window for this product category has passed.

@@ -14,7 +14,7 @@ from ..schemas import (
     RoutingDecision,
 )
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_user_prompt
-from .retrieval import DEFAULT_K, GuidelineIndex, case_query
+from .retrieval import DEFAULT_K, GuidelineIndex, case_probes
 
 DEFAULT_HOST = "http://localhost:11434"
 
@@ -71,7 +71,7 @@ class LlmRouter:
         retrieved = []
         guidelines = self.guidelines
         if self.index is not None:
-            retrieved = self.index.search(case_query(case), k=self.top_k)
+            retrieved = self.index.search_many(case_probes(case), k=self.top_k)
             shown = {r.guideline_id for r in retrieved}
             guidelines = [g for g in self.index.guidelines if g.guideline_id in shown]
 

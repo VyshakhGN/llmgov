@@ -113,15 +113,36 @@ cases:
     user_message: >
       Hi, I bought a pair of jeans from you a few weeks back and they've started
       tearing. I'd like to send them back. What do I need to do?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        No order number, so nothing can be decided until the customer supplies
+        one. Asking for it commits to nothing and needs no human.
 
   - case_id: C-009
     user_message: >
       The screen on the monitor I ordered is cracked and I want a refund.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Same as C-008. The customer claims a fault, but with no order there is
+        nothing to check it against. Missing facts are the reason for
+        REQUEST_INFO, not a separate risk on top of it — treating them as one
+        would send every unidentified case to a human.
 
   - case_id: C-010
     user_message: >
       I am asking for the third time. Nobody has got back to me about my return. If I don't
       hear back today I'm going to my bank to reverse the charge.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      reasoning: >
+        Threatens a chargeback. The decision is only to ask for an order number,
+        but a payment dispute is raised and that needs a human regardless of how
+        little the system can do yet.
 
   - case_id: C-011
     order_id: A-08
@@ -129,23 +150,52 @@ cases:
       I ordered a coat on the 3rd, order A-08. The tracking still says "in
       transit" and it's been three weeks. I don't want it any more, can I just
       get a refund?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        The order has never been delivered, so there is no window to check and
+        nothing to return. Telling the customer we are chasing the delivery is
+        accurate and commits to nothing.
 
   - case_id: C-012
     order_id: A-09
     user_message: >
       Order A-09 never arrived. I dont want it anymore, just give me my money back.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: MISSING_INFO
+      reasoning: >
+        A possible lost parcel, which the policy engine has no rule for. It
+        reaches REQUEST_INFO through the missing delivery date, so any reply
+        talks about return windows when the customer is asking about a package
+        that never came. A human has to take this one.
 
   - case_id: C-013
     order_id: A-10
     user_message: >
       I'd like to return everything from order A-10, the jacket and the
       headphones. Neither is right.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        The order spans two categories with different windows, so no single one
+        applies. Asking which items they want to send back turns an internal
+        gap into a question the customer can answer.
 
   - case_id: C-014
     order_id: A-11
     user_message: >
       I sent back the dress from order A-11 last week. Could you let me know
       when the refund goes through?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        A deduction the customer has not questioned. They said nothing about the
+        item's condition, so there is no dispute to manage — G-BUS-001 sends
+        uncontested partial refunds automatically.
 
   - case_id: C-015
     order_id: A-12
@@ -153,18 +203,42 @@ cases:
       I've returned the boots from order A-12. I only had them on indoors to
       check the fit, so they went back in the same state they arrived in. When
       will I get my money back?
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: POLICY_MISMATCH_RISK
+      reasoning: >
+        The customer has already argued the boots came back as they went out,
+        and the deduction contradicts that directly. A contested judgement about
+        how someone handled goods should not be delivered by machine.
 
   - case_id: C-016
     order_id: A-13
     user_message: >
       The speaker from order A-13 turned up with a dent in the casing. I've sent
       it back already. I expect the full amount returned, this wasn't my doing.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      reasoning: >
+        The customer says the dent was there on arrival and the record says it
+        came back damaged. Someone has to decide whose account is right before a
+        deduction goes out, and the customer has already refused it in advance.
 
   - case_id: C-017
     order_id: A-14
     user_message: >
-      I've sent back the coat from order A-14. I know it's been a long time, it
-      just sat in my wardrobe.
+      I've sent the coat from order A-14 back. There's a small tear on the
+      sleeve, that was my fault. How does the refund work?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        The customer raises the damage themselves and takes responsibility for
+        it, so there is nothing to dispute and G-BUS-001 sends it. This is the
+        other side of the line from C-015 and C-016: those customers argue the
+        deduction, this one has already accepted it. If the reply is escalated
+        merely because damage is discussed, the guideline is being read as
+        keyword matching rather than judgement.
 
 
   - case_id: C-018
@@ -172,6 +246,12 @@ cases:
     user_message: >
       The kettle from order A-15 stopped working after four days. Can I get a
       refund?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        A faulty item well inside the window on an ordinary account. Nothing
+        contested, nothing sensitive.
 
   - case_id: C-019
     order_id: A-16
@@ -179,12 +259,26 @@ cases:
       I bought a jacket from you back in the spring, order A-16. The zip has
       completely failed. I know that's outside your usual returns window, but I
       understand faulty goods are covered for longer than that.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        A hundred and fifty days past delivery and still approved, because the
+        two-year guarantee in Directive 2019/771 outranks the return window. The
+        customer has the law right and the system agrees with them.
 
   - case_id: C-020
     order_id: A-17
     user_message: >
       The headphones from order A-17 are faulty, one side doesn't work at all.
       Refund please.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      reasoning: >
+        The reply itself is fine; the account is the problem. A chargeback flag
+        and seven refunds on eleven orders in four months. The refund may well be
+        legitimate, but a flagged account should not be paid out automatically.
 
 
   - case_id: C-021
@@ -192,54 +286,112 @@ cases:
     user_message: >
       Hi, I'd like to return the shirt from order A-18, it doesn't suit me.
       What's the process?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Routine approval inside the window. The kind of case the system exists
+        to handle without a person.
 
   - case_id: C-022
     order_id: A-19
     user_message: >
       Can I send back the bluetooth speaker from order A-19? I've decided I
       don't need it after all.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Routine approval inside the window.
 
   - case_id: C-023
     order_id: A-20
     user_message: >
       I want to return the scarf from order A-20, it isn't what I expected. How
       do I send it back?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Routine approval inside the window.
 
   - case_id: C-024
     order_id: A-21
     user_message: >
       Returning the trousers from order A-21, wrong fit again. Put the refund
       back on the usual card please.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      reasoning: >
+        Nineteen orders in eleven months and nine refunds against them. No flag
+        has been set, so the pattern in the account history is the only thing
+        that gives this away.
 
   - case_id: C-025
     order_id: A-22
     user_message: >
       Order A-22 was never delivered. I've asked the neighbours and checked
       round the back and there's nothing. I'd like a refund please.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      reasoning: >
+        The customer says the parcel never came; the record says it was
+        delivered ten days ago. One of the two is wrong and the system cannot
+        tell which. Paying out on a disputed delivery without a human looking is
+        how non-delivery fraud works.
 
   - case_id: C-026
     order_id: A-23
     user_message: >
       I'd like to send back the dress from order A-23. Sorry it's late, I kept
       forgetting to do it.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Fifteen days past a thirty-day window, and the customer is apologetic
+        rather than aggrieved. A good account record on its own is not a reason
+        to escalate a refusal — if it were, almost every denial would need a
+        human.
 
   - case_id: C-027
     order_id: A-24
     user_message: >
       Can I return the charger from order A-24? Turns out it isn't compatible
       with my phone.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Double the electronics window. Blunt refusal, verifiable reason.
 
   - case_id: C-028
     order_id: A-25
     user_message: >
       I want to return the jumper from order A-25. I think I might be just
       outside the window — it came about a month ago and I've been away since.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      reasoning: >
+        Thirty-one days against a thirty-day window. One day outside is still
+        outside, and the reply states the dates accurately. A window that bends
+        for a day is not a window, and a router asked to decide when to bend it
+        would be inventing policy rather than applying it.
 
   - case_id: C-029
     order_id: A-26
     user_message: >
       I've had no useful response about order A-26. If this isn't sorted out
       properly I'll be taking it to court.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      reasoning: >
+        Court proceedings are raised. The refusal is correct on the window, but
+        once someone threatens legal action the wording stops being routine.
 
   - case_id: C-030
     order_id: A-27
@@ -247,3 +399,11 @@ cases:
       I've shopped with you for years and never had a problem, so I'm
       disappointed. The coat from order A-27 has never fitted properly and I
       left it too long. Could you make an exception?
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      reasoning: >
+        Fifty-eight months, forty-four orders, never a refund, and now openly
+        disappointed and asking for an exception. The refusal is correct but the
+        relationship is worth more than the coat. Unlike C-026, this customer is
+        genuinely unhappy — which is what G-BUS-002 turns on.

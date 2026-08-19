@@ -112,7 +112,7 @@ orders:
     customer_id: CU-14
     order_status: RETURN_RECEIVED
     category: clothing
-    delivered_days_ago: 95
+    delivered_days_ago: 24
     is_faulty: false
     return_condition: damaged
     order_value_eur: 130.00

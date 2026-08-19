@@ -122,11 +122,16 @@ guidelines:
     risk_category: BUSINESS_RISK
     source: Company policy
     text: >
-      If the customer is unhappy and has a good record with us — orders over time,
-      no fraud flags, few or no previous refunds — route a denial to human review
-      before it is sent. Keeping the relationship is worth more than the amount in
-      dispute. This does not apply to customers with little history or frequent
-      refund claims.
+      If a refusal is going to someone plainly upset — voicing disappointment, or
+      asking for an exception — and their account shows many orders with few
+      refunds, route it to human review as a goodwill decision.
+
+  - guideline_id: G-BUS-003
+    risk_category: BUSINESS_RISK
+    source: FCA FG21/1 — fair treatment of vulnerable customers
+    text: >
+      If someone has died, or the customer is grieving or seriously ill, route
+      the case to human review whatever the refund decision is.
 
   - guideline_id: G-AUTO-001
     risk_category: NONE
