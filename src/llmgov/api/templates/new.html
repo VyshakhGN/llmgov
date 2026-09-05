@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}New run - llmgov{% endblock %}
+{% block n5 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Create a new run</h2>
+<p class="sub">Routes a set of cases and scores the result against the gold labels.</p>
+<form id="f">
+  <div class="panel">
+    <label><input type="radio" name="mode" value="rag" checked> rag - retrieved guidelines</label>
+    <label><input type="radio" name="mode" value="prompt_only"> prompt_only - no guidelines</label>
+    <label><input type="radio" name="mode" value="full_context"> full_context - all guidelines</label>
+    <p style="margin:.7rem 0 0">top-k <input type="number" name="top_k" value="{{ default_k }}" min="1" max="30" style="width:4rem"></p>
+  </div>
+  <div class="panel">
+    <p style="margin:0 0 .5rem">
+      <a href="#" onclick="pick(true);return false">All</a> &middot;
+      <a href="#" onclick="pick(false);return false">None</a>
+      <span id="count" class="mono" style="color:var(--muted);margin-left:1.25rem"></span>
+    </p>
+    <div style="columns:2;font-size:.88rem">
+    {% for c in cases %}
+      <label><input type="checkbox" name="case_ids" value="{{ c.case_id }}" checked>
+        <span class="mono">{{ c.case_id }}</span>
+        <span style="color:var(--muted)">{{ c.user_message[:52] }}…</span></label>
+    {% endfor %}
+    </div>
+  </div>
+  <button id="go">Run</button>
+  <button id="stop" type="button" class="ghost" style="display:none">Stop</button>
+</form>
+<pre id="out" style="margin-top:1rem;display:none"></pre>
+<script>
+const boxes = () => [...document.querySelectorAll('input[name=case_ids]')];
+function pick(v){ boxes().forEach(b => b.checked = v); tally(); }
+function tally(){ document.getElementById('count').textContent =
+  boxes().filter(b=>b.checked).length + ' selected'; }
+boxes().forEach(b => b.addEventListener('change', tally)); tally();
+
+document.getElementById('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  const out = document.getElementById('out');
+  const go = document.getElementById('go');
+  out.style.display = 'block'; out.textContent = ''; go.disabled = true;
+  document.getElementById('stop').style.display = 'inline-block';
+  const res = await fetch('/run', {method:'POST', body:new FormData(e.target)});
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  for(;;){
+    const {value, done} = await reader.read();
+    if(done) break;
+    const chunk = dec.decode(value, {stream:true});
+    out.textContent += chunk;
+    out.scrollTop = out.scrollHeight;
+    const m = out.textContent.match(/DONE (\/runs\/\S+)/);
+    if(m){ location.href = m[1]; return; }
+  }
+  go.disabled = false;
+  document.getElementById('stop').style.display = 'none';
+});
+
+document.getElementById('stop').addEventListener('click', async () => {
+  const b = document.getElementById('stop');
+  b.disabled = true; b.textContent = 'Stopping…';
+  await fetch('/run/stop', {method:'POST'});
+});
+</script>
+{% endblock %}

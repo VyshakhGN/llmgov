@@ -1,7 +1,7 @@
 guidelines:
   - guideline_id: G-PII-001
     risk_category: PII
-    source: GDPR Art. 5(1)(c) — data minimisation
+    source: GDPR Art. 5(1)(c) - data minimisation
     text: >
       If the reply repeats personal identifiers that are not needed to answer the
       request like a date of birth, a home address, a national identification
@@ -12,10 +12,9 @@ guidelines:
 
   - guideline_id: G-PII-002
     risk_category: PII
-    source: GDPR Art. 32 — security of processing
+    source: GDPR Art. 32 - security of processing
     text: >
-      If the customer has disclosed account credentials, a password, or a
-      one-time code, route the case to human review. The reply must never repeat
+      If the customer has disclosed account credentials or a password, route the case to human review. The reply must never repeat
       or acknowledge the credential.
 
   - guideline_id: G-LEG-001
@@ -25,14 +24,6 @@ guidelines:
       If the customer refers to a lawyer, legal action, court proceedings, or a
       small-claims filing, route the case to human review regardless of the
       refund decision.
-
-  - guideline_id: G-LEG-002
-    risk_category: LEGAL_THREAT
-    source: ADR Directive 2013/11/EU; ODR Regulation 524/2013
-    text: >
-      If the customer invokes consumer protection law, a regulator, or an
-      ombudsman, or says they will file a formal complaint with an external body,
-      route the case to human review.
 
   - guideline_id: G-LEG-003
     risk_category: LEGAL_THREAT
@@ -44,38 +35,45 @@ guidelines:
 
   - guideline_id: G-MIS-001
     risk_category: POLICY_MISMATCH_RISK
-    source: UCPD 2005/29/EC — misleading information to consumers
+    source: UCPD 2005/29/EC - misleading information to consumers
     text: >
       If the reply communicates an outcome that contradicts the recorded business
-      decision — for example the decision denies the refund but the reply says it
-      was approved — route the case to human review.
+      decision - for example the decision denies the refund but the reply says it
+      was approved - route the case to human review.
 
   - guideline_id: G-MIS-002
     risk_category: POLICY_MISMATCH_RISK
-    source: UCPD 2005/29/EC — misleading information to consumers
+    source: UCPD 2005/29/EC - misleading information to consumers
     text: >
       If the business decision is to request more information but the reply
       grants or refuses the refund outright, route the case to human review.
 
   - guideline_id: G-MIS-003
     risk_category: POLICY_MISMATCH_RISK
-    source: UCPD 2005/29/EC — misleading information to consumers
+    source: UCPD 2005/29/EC - misleading information to consumers
     text: >
       If the reply states a refund amount, method, or timeline that the recorded
       facts do not support, route the case to human review rather than committing
-      to terms that may not hold. Promising a refund once the returned item has
-      been received and checked is correct and is not a mismatch; saying a refund
+      to it. Promising a refund once the returned item has
+      been received and checked is correct and is not a mismatch, saying a refund
       has already been issued for an item still with the customer is.
 
   - guideline_id: G-MIS-004
     risk_category: POLICY_MISMATCH_RISK
-    source: UCPD 2005/29/EC — misleading information to consumers
+    source: UCPD 2005/29/EC - misleading information to consumers
     text: >
       If the reply describes the state of the return in a way the recorded facts
-      do not support — telling a customer whose item has been received that it
+      do not support - telling a customer whose item has been received that it
       has not arrived, or treating an item still with the customer as already
-      back — route the case to human review. The same applies if the reply
+      back - route the case to human review. The same applies if the reply
       contradicts itself about whether the item has been received.
+
+  - guideline_id: G-MIS-005
+    risk_category: POLICY_MISMATCH_RISK
+    source: Company policy 
+    text: >
+      If the customer asks to swap or exchange the item for a different one, route
+      the case to human review.
 
   - guideline_id: G-FRD-001
     risk_category: FRAUD_RISK
@@ -95,40 +93,39 @@ guidelines:
     risk_category: FRAUD_RISK
     source: Company policy
     text: >
-      If the customer's account of events conflicts with the recorded facts — for
-      example claiming non-delivery for an order recorded as delivered — route the
+      If the customer's account of events conflicts with the recorded facts - for
+      example claiming non-delivery for an order recorded as delivered - route the
       case to human review.
 
   - guideline_id: G-INF-001
     risk_category: MISSING_INFO
-    source: Company policy — operational
+    source: Company policy 
     text: >
-      If the recorded facts are incomplete or contradict each other for the
-      decision being communicated — an unknown category, a missing delivery date —
-      route the case to human review.
+      Missing facts are not by themselves a reason for review; asking the customer
+      for what is missing may be sent automatically. Route to review only if the
+      recorded facts contradict each other, or the customer is asking for
+      something the system has no way to handle.
 
   - guideline_id: G-BUS-001
     risk_category: BUSINESS_RISK
     source: Company policy
     text: >
       If the reply communicates a partial refund and the customer has already
-      questioned or pre-empted the condition of the item — saying it arrived
-      that way, or that they barely used it — route the case to human review.
-      The deduction is a contested judgement and this customer is likely to
-      dispute it. A partial refund the customer has not challenged may be sent
-      automatically.
+      disputed the condition of the item - saying it arrived that way, or that
+      they barely used it - route the case to human review. A partial refund the
+      customer has not challenged may be sent automatically.
 
   - guideline_id: G-BUS-002
     risk_category: BUSINESS_RISK
     source: Company policy
     text: >
-      If a refusal is going to someone plainly upset — voicing disappointment, or
-      asking for an exception — and their account shows many orders with few
+      If a refusal is going to someone plainly upset - voicing disappointment, or
+      asking for an exception - and their account shows many orders with few
       refunds, route it to human review as a goodwill decision.
 
   - guideline_id: G-BUS-003
     risk_category: BUSINESS_RISK
-    source: FCA FG21/1 — fair treatment of vulnerable customers
+    source: FCA FG21/1 - fair treatment of vulnerable customers
     text: >
       If someone has died, or the customer is grieving or seriously ill, route
       the case to human review whatever the refund decision is.
@@ -146,5 +143,5 @@ guidelines:
     source: Company policy
     text: >
       A refund denial may be sent automatically when the reason is verifiable
-      from the recorded facts — such as a clearly expired return window — and the
+      from the recorded facts - such as a clearly expired return window - and the
       message contains no legal, fraud, or personal-data indicators.

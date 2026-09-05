@@ -54,4 +54,4 @@ rules:
   - when: within_return_window
     decision: APPROVE_REFUND
     because: Inside the return window for this product category.
-    source: Directive 2011/83/EU Art. 9 (14-day minimum); windows follow German market practice (Zalando, MediaMarkt)
+    source: Directive 2011/83/EU Art. 9 (14-day minimum); windows follow German market practice (Apple - 14, Zalando - 30)

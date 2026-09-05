@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ run_id }} - RAG-LLM Routing{% endblock %}
+{% block n4 %}on{% endblock %}
+{% block body %}
+<h2 class="page">{{ run_id }}</h2>
+<p class="sub">{{ metrics.n }} cases scored</p>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ "%.3f"|format(metrics.precision) }}</b><span>precision</span></div>
+  <div class="stat"><b>{{ "%.3f"|format(metrics.recall) }}</b><span>recall</span></div>
+  <div class="stat"><b>{{ "%.3f"|format(metrics.f1) }}</b><span>F1</span></div>
+  <div class="stat"><b>{{ "%.3f"|format(metrics.accuracy) }}</b><span>accuracy</span></div>
+  <div class="stat"><b>{{ metrics.fn }}</b><span>missed</span></div>
+  <div class="stat"><b>{{ metrics.fp }}</b><span>over-flagged</span></div>
+  <div class="stat"><b>{{ "%.0f%%"|format(metrics.review_rate * 100) }}</b><span>review rate</span></div>
+</div>
+
+{% if summary.flagged %}
+<div class="panel" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+  <span><b style="color:var(--white)">{{ summary.reviewed }}</b> of {{ summary.flagged }} flagged cases reviewed</span>
+  {% if summary.reviewed %}
+    <span class="dim">changed {{ summary.edited + summary.rejected }}
+      ({{ summary.edited }} wording, {{ summary.rejected }} decision) -
+      approved as-is {{ summary.unchanged }}</span>
+  {% endif %}
+  <a href="/runs/{{ run_id }}/review" style="margin-left:auto">Open review queue</a>
+</div>
+{% endif %}
+
+<h3>Cases</h3>
+<div class="panel tight scroll"><table>
+<thead><tr><th>case</th><th>policy rule</th><th>gold</th><th>router</th>
+  <th class="num">seconds</th><th></th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td class="mono"><a href="/runs/{{ run_id }}/cases/{{ r.case_id }}">{{ r.case_id }}</a></td>
+  <td class="mono dim" style="font-size:.78rem">{{ r.rule }}</td>
+  <td class="dim mono" style="font-size:.78rem">{{ r.gold or "-" }}</td>
+  <td>{% if r.action == "AUTO_SEND" %}<span class="pill p-green">AUTO_SEND</span>
+      {% else %}<span class="pill p-amber">{{ r.category }}</span>{% endif %}</td>
+  <td class="num dim">{{ r.latency }}</td>
+  <td>{% if r.hit is none %}{% elif r.hit %}<span class="pill p-green">ok</span>
+      {% else %}<span class="pill p-red">miss</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

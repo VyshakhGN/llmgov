@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}RAG-LLM Routing{% endblock %}</title>
+<style>
+  :root{
+    --ground:#0f0f10; --panel:#181819; --soft:#202021;
+    --line:#2b2b2d; --line-soft:#232324;
+    --white:#ffffff; --ink:#d8d8da; --muted:#7e7e84;
+    --red:#e63329; --red-soft:#2b1513;
+    --green:#4fb98a; --green-soft:#12251c;
+    --amber:#dda044; --amber-soft:#282013;
+    --blue:#6d9ad6; --blue-soft:#161f2b;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--ground); color:var(--ink);
+    font:15px/1.55 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+
+  .bar{
+    position:fixed; inset:0 0 auto 0; height:62px; z-index:20;
+    background:var(--ground); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:.8rem; padding:0 1.75rem;
+  }
+  .bar img{height:24px;width:auto;display:block}
+  .bar h1{font-size:.9rem;font-weight:650;color:var(--white);margin:0;
+          letter-spacing:.09em;text-transform:uppercase}
+
+  .side{
+    position:fixed; top:62px; bottom:0; left:0; width:228px; z-index:10;
+    background:var(--ground); border-right:1px solid var(--line);
+    padding:1.1rem .75rem; display:flex; flex-direction:column; gap:.2rem;
+  }
+  .side a{
+    display:block; padding:.6rem .85rem; border-radius:6px;
+    color:var(--muted); text-decoration:none; font-size:.92rem;
+  }
+  .side a:hover{background:var(--soft); color:var(--white)}
+  .side a.on{background:var(--red-soft); color:var(--red); font-weight:650}
+  .side .gap{flex:1}
+  .side .note{font-size:.72rem;color:var(--muted);padding:0 .85rem;line-height:1.5}
+
+  main{margin:62px 0 0 228px; padding:2rem 2.25rem 5rem; max-width:1180px}
+  h2.page{font-size:1.75rem;font-weight:700;color:var(--white);
+          margin:0 0 .35rem;letter-spacing:-.02em}
+  p.sub{color:var(--muted);margin:0 0 1.5rem;font-size:.92rem}
+  h3{font-size:.95rem;font-weight:650;color:var(--white);margin:1.9rem 0 .7rem}
+  a{color:var(--red)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+         padding:1.15rem 1.35rem;margin-bottom:1.1rem}
+  .panel.tight{padding:.5rem .35rem}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th{text-align:left;font-size:.72rem;font-weight:600;letter-spacing:.04em;
+     text-transform:uppercase;color:var(--muted);padding:.65rem 1rem}
+  td{padding:.7rem 1rem;border-top:1px solid var(--line-soft);vertical-align:top}
+  tbody tr:hover td{background:var(--soft)}
+  td a{color:var(--white);text-decoration:none;font-weight:600}
+  td a:hover{color:var(--red)}
+  .num{font-variant-numeric:tabular-nums;text-align:right}
+  .mono{font-family:var(--mono);font-size:.85rem}
+  .dim{color:var(--muted)}
+
+  .pill{display:inline-block;border-radius:4px;padding:.2rem .55rem;
+        font-size:.72rem;font-weight:600;letter-spacing:.03em;white-space:nowrap}
+  .p-green{background:var(--green-soft);color:var(--green)}
+  .p-red{background:var(--red-soft);color:var(--red)}
+  .p-amber{background:var(--amber-soft);color:var(--amber)}
+  .p-blue{background:var(--blue-soft);color:var(--blue)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem}
+  .stat{background:var(--soft);border-radius:6px;padding:.85rem 1rem}
+  .stat b{display:block;font-size:1.65rem;font-weight:700;color:var(--white);
+          letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat span{font-size:.74rem;color:var(--muted)}
+
+  .quote{background:var(--soft);border-radius:6px;padding:.8rem 1rem;
+         font-size:.9rem;white-space:pre-wrap}
+  dl{display:grid;grid-template-columns:auto 1fr;gap:.4rem 1.1rem;margin:0;font-size:.89rem}
+  dt{font-size:.78rem;color:var(--muted);padding-top:.12rem}
+  dd{margin:0}
+  pre{background:var(--soft);border-radius:6px;padding:1rem;overflow-x:auto;
+      font-family:var(--mono);font-size:.79rem;white-space:pre-wrap;margin:0}
+  .scroll{overflow-x:auto}
+
+  button{font:inherit;font-weight:650;letter-spacing:.04em;text-transform:uppercase;
+         font-size:.82rem;background:var(--red);color:#fff;border:0;
+         border-radius:4px;padding:.7rem 1.6rem;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent;color:var(--muted);
+               border:1px solid var(--line);margin-left:.5rem}
+  button.ghost:hover{color:var(--ink);border-color:var(--muted)}
+  input[type=number]{font:inherit;background:var(--soft);color:var(--ink);
+                     border:1px solid var(--line);border-radius:4px;
+                     padding:.35rem .5rem;width:4.5rem}
+  input[type=checkbox]{accent-color:var(--red)}
+  label{display:block;padding:.22rem 0;font-size:.9rem}
+  .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+           gap:1rem;align-items:end}
+  .choices .hint{font-size:.82rem;color:var(--muted);margin:0 0 .55rem;line-height:1.45}
+  .choices button{width:100%}
+  .drawer{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--line-soft)}
+  .drawer[hidden]{display:none}
+  .drawer .row{display:flex;gap:.5rem;margin-top:.7rem}
+  .field{width:100%;font:inherit;font-size:.89rem;background:var(--soft);color:var(--ink);
+         border:1px solid var(--line);border-radius:6px;padding:.7rem .9rem;resize:vertical}
+  .field:focus{outline:none;border-color:var(--muted)}
+  .step{display:flex;align-items:center;gap:.6rem;margin:1.9rem 0 .7rem}
+  .step b{width:22px;height:22px;border-radius:4px;background:var(--red-soft);
+          color:var(--red);font-size:.75rem;display:grid;place-items:center;font-weight:650}
+  .step span{font-size:.95rem;font-weight:650;color:var(--white)}
+</style>
+</head>
+<body>
+<div class="bar">
+  {% if request.state.logo %}<img src="{{ request.state.logo }}" alt="">{% endif %}
+  <h1>RAG-LLM Routing Application</h1>
+</div>
+<nav class="side">
+  <a href="/rules" class="{% block n1 %}{% endblock %}">View rules</a>
+  <a href="/guidelines" class="{% block n2 %}{% endblock %}">View guidelines</a>
+  <a href="/cases" class="{% block n3 %}{% endblock %}">View cases</a>
+  <a href="/orders" class="{% block n6 %}{% endblock %}">View orders</a>
+  <a href="/customers" class="{% block n7 %}{% endblock %}">View customers</a>
+  <a href="/" class="{% block n4 %}{% endblock %}">View runs</a>
+  <a href="/run" class="{% block n5 %}{% endblock %}">Create a new run</a>
+  <div class="gap"></div>
+</nav>
+<main>{% block body %}{% endblock %}</main>
+</body>
+</html>

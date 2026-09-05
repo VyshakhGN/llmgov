@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Review - {{ run_id }}{% endblock %}
+{% block n4 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Review queue</h2>
+<p class="sub"><a href="/runs/{{ run_id }}">{{ run_id }}</a> - cases the router sent to human review.
+You can approve, edit, or reject the decision.</p>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ summary.flagged }}</b><span>flagged</span></div>
+  <div class="stat"><b>{{ summary.reviewed }}</b><span>reviewed</span></div>
+  <div class="stat"><b>{{ summary.edited + summary.rejected }}</b><span>changed</span></div>
+  <div class="stat"><b>{{ summary.unchanged }}</b><span>approved as-is</span></div>
+  <div class="stat"><b>{{ summary.edited }}</b><span>edited - drafting</span></div>
+  <div class="stat"><b>{{ summary.rejected }}</b><span>rejected - policy</span></div>
+</div>
+
+{% for f in flagged %}
+{% set t = f.t %}
+{% set c = f.case %}
+{% set fa = c.system_facts if c else none %}
+<div class="panel" id="{{ t.case_id }}">
+  <div style="display:flex;align-items:baseline;gap:.7rem;margin-bottom:1rem">
+    <a href="/runs/{{ run_id }}/cases/{{ t.case_id }}" style="font-weight:700;color:var(--white)">{{ t.case_id }}</a>
+    <span class="pill p-amber">{{ t.decision.risk_category }}</span>
+    {% if f.review %}
+      <span class="pill {{ 'p-green' if f.review.outcome == 'APPROVED_UNCHANGED' else 'p-red' if f.review.outcome == 'REJECTED' else 'p-blue' }}"
+            style="margin-left:auto">{{ f.review.outcome.replace('_',' ')|lower }}</span>
+    {% endif %}
+  </div>
+
+  <p class="dim" style="font-size:.78rem;margin:0 0 .3rem">What the customer wrote</p>
+  <div class="quote" style="margin-bottom:1rem">{{ c.user_message if c else "-" }}</div>
+
+  {% if fa %}
+  <p class="dim" style="font-size:.78rem;margin:0 0 .4rem">The facts behind the decision</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+              gap:.45rem;margin-bottom:1rem">
+    <div class="stat"><b style="font-size:.95rem">{{ fa.order_id or "not found" }}</b><span>order</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ fa.category.value if fa.category else "unknown" }}</b><span>category</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ fa.delivered_days_ago if fa.delivered_days_ago is not none else "?" }} d</b><span>since delivery ({{ fa.order_status or "?" }})</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ fa.order_value_eur }} EUR</b><span>order value</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ "faulty" if fa.is_faulty else (fa.return_condition.value if fa.return_condition else "ok") }}</b><span>condition</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ fa.total_orders }} / {{ fa.refunds_last_12m }}</b><span>orders / refunds 12m</span></div>
+    <div class="stat"><b style="font-size:.95rem;color:{{ 'var(--red)' if fa.account_flags else 'var(--white)' }}">{{ fa.account_flags|join(", ") or "none" }}</b><span>account flags</span></div>
+  </div>
+  {% endif %}
+
+  <p class="dim" style="font-size:.78rem;margin:0 0 .3rem">Refund decision (Based on the rules)</p>
+  <p style="margin:0 0 1rem;font-size:.89rem">
+    <span class="pill p-blue">{{ c.policy_decision.value if c else "?" }}</span>
+    <span class="mono dim" style="font-size:.78rem">{{ t.stages.policy_rule }}</span><br>
+    <span class="dim">{{ t.stages.policy_reason }}</span>
+    {% if t.stages.refund_amount_eur is not none %}<span class="dim"> - {{ t.stages.refund_amount_eur }} EUR</span>{% endif %}
+  </p>
+
+  <form method="post" action="/runs/{{ run_id }}/review/{{ t.case_id }}" class="rev">
+
+    <div class="choices">
+      <div>
+        <p class="hint">The decision is right and the reply reads well. Nothing needs changing.</p>
+        <button name="outcome" value="APPROVED_UNCHANGED" class="ghost">Approve</button>
+      </div>
+      <div>
+        <p class="hint">The decision is right but the wording is off. You can change the words, not the outcome.</p>
+        <button type="button" class="ghost" data-open="edit">Edit wording</button>
+      </div>
+      <div>
+        <p class="hint">The decision itself is wrong. Rewriting will not fix it, so it needs to be changed.</p>
+        <button type="button" class="ghost" data-open="reject">Reject</button>
+      </div>
+    </div>
+
+    <div class="drawer" data-drawer="edit" hidden>
+      <p class="dim" style="font-size:.78rem;margin:0 0 .35rem">Edit the wording only - the refund decision is not yours to change</p>
+      <textarea name="edited_response" rows="4" class="field">{{ f.review.edited_response if f.review and f.review.edited_response else t.stages.generated_draft }}</textarea>
+      <div class="row">
+        <button name="outcome" value="APPROVED_EDITED">Save edit</button>
+        <button type="button" class="ghost" data-cancel>Cancel</button>
+      </div>
+    </div>
+
+    <div class="drawer" data-drawer="reject" hidden>
+      <p class="dim" style="font-size:.78rem;margin:0 0 .35rem">Why is the decision wrong? This is the evidence for changing a rule later.</p>
+      <input type="text" name="notes" class="field" value="{{ f.review.notes if f.review else '' }}"
+             placeholder="e.g. should have been denied, the return was months late">
+      <div class="row">
+        <button name="outcome" value="REJECTED">Confirm reject</button>
+        <button type="button" class="ghost" data-cancel>Cancel</button>
+      </div>
+    </div>
+  </form>
+
+  <details style="margin-top:1rem;border-top:1px solid var(--line-soft);padding-top:.8rem">
+    <summary style="cursor:pointer;color:var(--muted);font-size:.84rem">
+      Justification by the router</summary>
+    <p style="margin:.7rem 0 0;font-size:.89rem">{{ t.decision.justification }}</p>
+    {% if t.decision.retrieved_guidelines %}
+      <p class="dim" style="margin:.7rem 0 .2rem;font-size:.78rem">Guidelines it was shown</p>
+      {% for g in t.decision.retrieved_guidelines %}
+        <p style="margin:0 0 .35rem;font-size:.85rem">
+          <span class="mono dim">{{ g.rank }}. {{ g.guideline_id }}</span> {{ g.text }}</p>
+      {% endfor %}
+    {% endif %}
+  </details>
+</div>
+{% endfor %}
+
+{% if not flagged %}<div class="panel dim">Nothing was flagged in this run.</div>{% endif %}
+
+<script>
+document.querySelectorAll('form.rev').forEach(f => {
+  const drawers = f.querySelectorAll('[data-drawer]');
+  const choices = f.querySelector('.choices');
+  const show = name => {
+    drawers.forEach(d => d.hidden = d.dataset.drawer !== name);
+    choices.hidden = !!name;
+    if (name) f.querySelector(`[data-drawer="${name}"] .field`).focus();
+  };
+  f.querySelectorAll('[data-open]').forEach(b =>
+    b.addEventListener('click', () => show(b.dataset.open)));
+  f.querySelectorAll('[data-cancel]').forEach(b =>
+    b.addEventListener('click', () => show(null)));
+  f.addEventListener('submit', e => {
+    const notes = f.querySelector('[name=notes]');
+    if (e.submitter && e.submitter.value === 'REJECTED' && !notes.value.trim()) {
+      e.preventDefault();
+      notes.focus();
+    }
+  });
+});
+</script>
+{% endblock %}

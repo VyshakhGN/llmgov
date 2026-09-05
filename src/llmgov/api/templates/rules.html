@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Rules - RAG-LLM Routing{% endblock %}
+{% block n1 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Policy rules</h2>
+<p class="sub">The refund decision. First match rules wins. no model involved.</p>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ rules.return_windows.clothing }}</b><span>days - return window for clothing</span></div>
+  <div class="stat"><b>{{ rules.return_windows.electronics }}</b><span>days - return window for electronics</span></div>
+  <div class="stat"><b>{{ rules.damaged_return_deduction_pct }}%</b><span>damaged deduction</span></div>
+  <div class="stat"><b>{{ rules.refund_processing_days }}</b><span>days to process refund.</span></div>
+</div>
+
+<div class="panel tight scroll"><table>
+<thead><tr><th class="num">#</th><th>when</th><th>decision</th><th>reason</th><th>source</th></tr></thead>
+<tbody>
+{% for r in rules.rules %}
+<tr>
+  <td class="num dim">{{ loop.index }}</td>
+  <td class="mono">{{ r.when }}</td>
+  <td>{% if "APPROVE" in r.decision %}<span class="pill p-green">{{ r.decision }}</span>
+      {% elif "DENY" in r.decision %}<span class="pill p-red">{{ r.decision }}</span>
+      {% elif "PARTIAL" in r.decision %}<span class="pill p-amber">{{ r.decision }}</span>
+      {% else %}<span class="pill p-blue">{{ r.decision }}</span>{% endif %}</td>
+  <td>{{ r.because }}</td>
+  <td class="dim" style="font-size:.8rem">{{ r.source or "-" }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

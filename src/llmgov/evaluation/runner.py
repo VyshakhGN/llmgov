@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from ..drafting import Drafter
@@ -33,24 +33,31 @@ def run_cases(
     drafter: Drafter | None = None,
     extractor: OrderExtractor | None = None,
     orders: dict[str, SystemFacts] | None = None,
+    report: Callable[[str], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> list[TraceRecord]:
     cases = list(cases)
     total = len(cases)
     traces = []
+    emit = report or (lambda text: print(text, end="", flush=True))
 
     for i, case in enumerate(cases, start=1):
+        if should_stop is not None and should_stop():
+            emit(f"stopped after {i - 1} of {total} cases\n")
+            break
+
         if progress:
             gold = case.gold.action.value if case.gold else "?"
-            print(f"[{i}/{total}] {case.case_id}  gold={gold:13} ", end="", flush=True)
+            emit(f"[{i}/{total}] {case.case_id}  gold={gold:13} ")
 
         extracted_order_id = None
         if extractor is not None:
             if progress:
-                print("id... ", end="", flush=True)
+                emit("id... ")
             extracted_order_id = extractor.extract(case.user_message)
             if progress:
                 mark = "" if extracted_order_id == case.order_id else "!"
-                print(f"{extracted_order_id or '-'}{mark:1}  ", end="", flush=True)
+                emit(f"{extracted_order_id or '-'}{mark:1}  ")
             facts = (orders or {}).get(extracted_order_id or "", SystemFacts())
             case = case.model_copy(
                 update={
@@ -62,7 +69,7 @@ def run_cases(
         generated_draft = None
         if drafter is not None:
             if progress:
-                print("drafting... ", end="", flush=True)
+                emit("drafting... ")
             generated_draft = drafter.write(case)
             case = case.model_copy(update={"draft_response": generated_draft})
 
@@ -80,16 +87,16 @@ def run_cases(
         if progress:
             hit = "  " if case.gold is None else ("ok" if decision.action is case.gold.action else "XX")
             note = "" if decision.risk_category.value == "NONE" else decision.risk_category.value
-            print(
+            emit(
                 f"router: {decision.action.value:13} {note:22} "
-                f"{latency_ms / 1000:5.1f}s  {hit}"
+                f"{latency_ms / 1000:5.1f}s  {hit}\n"
             )
 
             if generated_draft:
-                print(f"        draft: {' '.join(generated_draft.split())}")
+                emit(f"        draft: {' '.join(generated_draft.split())}\n")
             masked_text = getattr(router, "last_masked_text", "")
             if masked_text:
-                print(f"        masked: {masked_text}")
+                emit(f"        masked: {masked_text}\n")
 
         outcome = policy.decide(case.system_facts) if policy else None
         stages = PipelineStages(

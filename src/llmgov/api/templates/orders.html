@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Orders - RAG-LLM Routing{% endblock %}
+{% block n6 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Orders</h2>
+<p class="sub">{{ orders|length }} orders. The router never
+  reads this file, the order number is pulled from the customer's message, then looked
+  up here and joined with the customer's profile.</p>
+
+<div class="panel tight scroll"><table>
+<thead><tr><th>order</th><th>customer</th><th>status</th><th>category</th>
+  <th class="num">delivered</th><th class="num">window</th><th>condition</th>
+  <th class="num">value</th></tr></thead>
+<tbody>
+{% for oid, f in orders.items() %}
+<tr>
+  <td class="mono" style="color:var(--white);font-weight:600">{{ oid }}</td>
+  <td class="mono dim">{{ f.customer_id }}</td>
+  <td class="mono dim" style="font-size:.78rem">{{ f.order_status }}</td>
+  <td>{{ f.category.value if f.category else "-" }}</td>
+  <td class="num">{{ f.delivered_days_ago if f.delivered_days_ago is not none else "-" }}</td>
+  <td class="num dim">{{ policy.window_for(f) or "-" }}</td>
+  <td>{% if f.is_faulty %}<span class="pill p-red">faulty</span>
+      {% elif f.return_condition and f.return_condition.value == "damaged" %}<span class="pill p-amber">damaged</span>
+      {% elif f.return_condition %}<span class="pill p-green">acceptable</span>
+      {% else %}<span class="dim">-</span>{% endif %}</td>
+  <td class="num">{{ f.order_value_eur }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<p class="sub" style="margin-top:.6rem">Delivered and window are in days. An order past its window
+  is denied unless the item is faulty, which the two-year guarantee covers regardless.</p>
+{% endblock %}

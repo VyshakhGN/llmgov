@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Guidelines - RAG-LLM Routing{% endblock %}
+{% block n2 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Routing guidelines</h2>
+<p class="sub">{{ guidelines|length }} guidelines to decide when a reply needs a human review.
+  Retrieved by meaning in <b style="color:var(--white);font-weight:600">RAG</b> mode,
+  all of them in <b style="color:var(--white);font-weight:600">full_context</b> mode,
+  and none in <b style="color:var(--white);font-weight:600">prompt_only</b> mode.
+  {{ sourced }} cite regulations; the rest are "company" policy.</p>
+
+<div class="panel tight scroll"><table>
+<thead><tr><th>id</th><th>category</th><th>text</th><th>source</th></tr></thead>
+<tbody>
+{% for g in guidelines %}
+<tr>
+  <td class="mono">{{ g.guideline_id }}</td>
+  <td><span class="pill {{ 'p-red' if g.risk_category.value in ('LEGAL_THREAT','FRAUD_RISK')
+        else 'p-amber' if g.risk_category.value in ('BUSINESS_RISK','POLICY_MISMATCH_RISK')
+        else 'p-green' if g.risk_category.value == 'NONE' else 'p-blue' }}">{{ g.risk_category.value }}</span></td>
+  <td>{{ g.text }}</td>
+  <td class="dim" style="font-size:.8rem">{{ g.source }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

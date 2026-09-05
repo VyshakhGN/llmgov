@@ -25,7 +25,6 @@ ROUTER_SCHEMA: dict[str, Any] = {
         "risk_category": {"type": "string", "enum": [r.value for r in RiskCategory]},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "justification": {"type": "string"},
-        "reviewer_hints": {"type": "string"},
     },
     "required": ["action", "risk_category", "confidence", "justification"],
 }
@@ -148,7 +147,6 @@ def _parse(raw: str) -> RoutingDecision:
         risk_category=category,
         confidence=confidence,
         justification=str(data.get("justification", "")).strip(),
-        reviewer_hints=str(data.get("reviewer_hints", "")).strip(),
         raw_model_output=raw,
     )
 

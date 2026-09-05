@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Runs - RAG-LLM Routing{% endblock %}
+{% block n4 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Runs</h2>
+<p class="sub">{{ runs|length }} recorded runs. Only cases carrying a gold label are scored.</p>
+<div class="panel tight scroll"><table>
+<thead><tr><th>run</th><th>mode</th><th class="num">cases</th><th class="num">precision</th>
+  <th class="num">recall</th><th class="num">F1</th><th class="num">accuracy</th>
+  <th class="num">missed</th><th class="num">over-flagged</th><th class="num">review rate</th></tr></thead>
+<tbody>
+{% for r in runs %}
+<tr>
+  <td class="mono"><a href="/runs/{{ r.id }}">{{ r.id }}</a></td>
+  <td><span class="pill {{ 'p-red' if r.mode == 'rag' else 'p-blue' }}">{{ r.mode }}</span></td>
+  <td class="num">{{ r.m.n }}</td>
+  <td class="num">{{ "%.3f"|format(r.m.precision) }}</td>
+  <td class="num">{{ "%.3f"|format(r.m.recall) }}</td>
+  <td class="num">{{ "%.3f"|format(r.m.f1) }}</td>
+  <td class="num">{{ "%.3f"|format(r.m.accuracy) }}</td>
+  <td class="num">{{ r.m.fn }}</td>
+  <td class="num">{{ r.m.fp }}</td>
+  <td class="num">{{ "%.0f%%"|format(r.m.review_rate * 100) }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

@@ -1,11 +1,12 @@
 {
-  // uv-created venvs have no `pip`. Without this, the Python Environments
-  // extension repeatedly fails on `python -m pip list` and logs errors.
   "python-envs.alwaysUseUv": true,
   "python-envs.defaultEnvManager": "ms-python.vscode-python-envs:uv",
 
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "python.terminal.activateEnvironment": true,
+
+  "html.validate.styles": false,
+  "html.validate.scripts": false,
 
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,

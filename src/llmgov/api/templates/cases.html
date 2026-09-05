@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Cases - RAG-LLM Routing{% endblock %}
+{% block n3 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Cases</h2>
+<p class="sub">{{ cases|length }} labelled cases. The gold label is what a human reviewer might
+  decide about the reply the system produces - it is the answer key a run is scored against.</p>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ cases|length }}</b><span>cases</span></div>
+  <div class="stat"><b>{{ auto }}</b><span>auto-send</span></div>
+  <div class="stat"><b>{{ review }}</b><span>needs review</span></div>
+</div>
+
+<div class="panel tight scroll"><table>
+<thead><tr><th>case</th><th>policy</th><th>message</th><th>gold</th></tr></thead>
+<tbody>
+{% for c in cases %}
+<tr>
+  <td class="mono">{{ c.case_id }}</td>
+  <td class="mono dim" style="font-size:.78rem">{{ c.policy_decision.value }}</td>
+  <td style="min-width:22rem">{{ c.user_message }}</td>
+  <td>
+    {% if c.gold %}
+      {% if c.gold.action.value == "AUTO_SEND" %}<span class="pill p-green">AUTO_SEND</span>
+      {% else %}<span class="pill p-amber">{{ c.gold.risk_category.value }}</span>{% endif %}
+    {% else %}<span class="dim">-</span>{% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

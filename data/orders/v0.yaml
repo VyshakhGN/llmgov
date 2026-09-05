@@ -6,7 +6,7 @@ orders:
     delivered_days_ago: 18
     is_faulty: false
     return_condition: acceptable
-    order_value_eur: 74.90
+    order_value_eur: 74.00
 
   A-02:                          
     customer_id: CU-02

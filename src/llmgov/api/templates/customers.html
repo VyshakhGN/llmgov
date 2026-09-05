@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Customers - RAG-LLM Routing{% endblock %}
+{% block n7 %}on{% endblock %}
+{% block body %}
+<h2 class="page">Customers</h2>
+<p class="sub">{{ customers|length }} accounts, joined onto the order when a case is loaded.
+  The router sees orders placed, refunds in the last 12 months, and any flags - these are what
+  the fraud and goodwill guidelines read. The drafter never sees them.</p>
+
+<div class="panel tight scroll"><table>
+<thead><tr><th>customer</th><th class="num">orders</th><th class="num">refunds 12m</th>
+  <th class="num">refund rate</th><th>flags</th><th>orders in this set</th></tr></thead>
+<tbody>
+{% for c in customers %}
+<tr>
+  <td class="mono" style="color:var(--white);font-weight:600">{{ c.id }}</td>
+  <td class="num">{{ c.total_orders }}</td>
+  <td class="num">{{ c.refunds_last_12m }}</td>
+  <td class="num">{% if c.rate is not none %}<span class="{{ 'pill p-red' if c.rate >= 0.4 else '' }}">{{ "%.0f%%"|format(c.rate * 100) }}</span>{% else %}-{% endif %}</td>
+  <td>{% if c.account_flags %}<span class="pill p-red">{{ c.account_flags|join(", ") }}</span>
+      {% else %}<span class="dim">none</span>{% endif %}</td>
+  <td class="mono dim">{{ c.owns|join(", ") or "-" }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<p class="sub" style="margin-top:.6rem">Refund rate is refunds divided by lifetime orders, shown
+  because that ratio is what separates an ordinary account from an abusive one. Account age is
+  recorded but no longer shown to the router - no guideline referenced it, and it was being used
+  to invent rules.</p>
+{% endblock %}

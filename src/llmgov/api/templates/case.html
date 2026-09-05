@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ case_id }} - llmgov{% endblock %}
+{% block n4 %}on{% endblock %}
+{% block body %}
+<h2 class="page mono">{{ case_id }}</h2>
+<p class="sub"><a href="/runs/{{ run_id }}">← {{ run_id }}</a></p>
+{% if not t %}<div class="panel">No trace for this case in this run.</div>{% else %}
+{% set s = t.stages %}
+
+<div class="step"><b>1</b><span>Customer message</span></div>
+<div class="panel"><div class="quote">{{ case.user_message if case else "-" }}</div></div>
+
+<div class="step"><b>2</b><span>Order number read from the message</span></div>
+<div class="panel"><dl>
+  <dt>extracted</dt><dd class="mono">{{ s.extracted_order_id or "none" }}</dd>
+  <dt>expected</dt><dd class="mono">{{ s.expected_order_id or "none" }}</dd>
+  <dt>prompt</dt><dd class="mono">{{ s.extract_prompt_version or "-" }}</dd>
+</dl></div>
+
+<div class="step"><b>3</b><span>Order and customer facts</span></div>
+<div class="panel"><dl>
+{% set f = case.system_facts if case else none %}
+{% if f %}
+  <dt>status</dt><dd class="mono">{{ f.order_status or "-" }}</dd>
+  <dt>category</dt><dd class="mono">{{ f.category.value if f.category else "unknown" }}</dd>
+  <dt>delivered</dt><dd class="mono">{{ f.delivered_days_ago if f.delivered_days_ago is not none else "unknown" }} days ago</dd>
+  <dt>faulty</dt><dd class="mono">{{ "yes" if f.is_faulty else "no" }}</dd>
+  <dt>condition</dt><dd class="mono">{{ f.return_condition.value if f.return_condition else "-" }}</dd>
+  <dt>value</dt><dd class="mono">{{ f.order_value_eur }} EUR</dd>
+  <dt>account</dt><dd class="mono">{{ f.customer_since_months }} months · {{ f.total_orders }} orders · {{ f.refunds_last_12m }} refunds/12m · flags {{ f.account_flags|join(", ") or "none" }}</dd>
+{% endif %}
+</dl></div>
+
+<div class="step"><b>4</b><span>Policy decision (no model involved)</span></div>
+<div class="panel"><dl>
+  <dt>rule</dt><dd class="mono">{{ s.policy_rule }}</dd>
+  <dt>because</dt><dd>{{ s.policy_reason }}</dd>
+  <dt>amount</dt><dd class="mono">{{ s.refund_amount_eur if s.refund_amount_eur is not none else "n/a" }}</dd>
+</dl></div>
+
+{% if s.masked %}
+<div class="step"><b>5</b><span>Masking</span></div>
+<div class="panel">
+  <p class="sub" style="margin:0 0 .5rem">found: <span class="mono">{{ s.masked|join(", ") }}</span></p>
+  <div class="quote">{{ s.masked_message }}</div>
+</div>
+{% endif %}
+
+<div class="step"><b>6</b><span>Generated reply</span></div>
+<div class="panel">
+  <div class="quote">{{ s.generated_draft or "-" }}</div>
+  <p class="sub" style="margin:.6rem 0 0">drafter <span class="mono">{{ s.draft_prompt_version }}</span></p>
+</div>
+
+{% if t.decision.retrieved_guidelines %}
+<div class="step"><b>7</b><span>Guidelines retrieved</span></div>
+<div class="panel">
+{% for g in t.decision.retrieved_guidelines %}
+  <p style="margin:0 0 .55rem"><span class="mono" style="color:var(--muted)">{{ g.rank }}. {{ g.guideline_id }}</span><br>{{ g.text }}</p>
+{% endfor %}
+</div>
+{% endif %}
+
+<div class="step"><b>8</b><span>Router decision</span></div>
+<div class="panel">
+  <p style="margin:0 0 .6rem">
+    {% if t.decision.action == "AUTO_SEND" %}<span class="pill p-green">AUTO_SEND</span>
+    {% else %}<span class="pill p-amber">NEEDS_REVIEW · {{ t.decision.risk_category }}</span>{% endif %}
+    {% if t.gold %}
+      &nbsp;gold: <span class="mono">{{ t.gold.action }}{% if t.gold.risk_category != "NONE" %} · {{ t.gold.risk_category }}{% endif %}</span>
+      {% if t.gold.action == t.decision.action %}<span class="pill p-green">ok</span>
+      {% else %}<span class="pill p-red">miss</span>{% endif %}
+    {% endif %}
+  </p>
+  <dl>
+    <dt>why</dt><dd>{{ t.decision.justification }}</dd>
+    <dt>confidence</dt><dd class="mono">{{ t.decision.confidence }}</dd>
+    <dt>mode</dt><dd class="mono">{{ t.mode }} · {{ t.model_name }} · {{ "%.1f"|format((t.latency_ms or 0)/1000) }}s</dd>
+  </dl>
+</div>
+
+{% if t.gold and t.gold.reasoning %}
+<h3>Gold label reasoning</h3>
+<div class="panel">{{ t.gold.reasoning }}</div>
+{% endif %}
+
+<h3>Exact router prompt</h3>
+<details><summary class="mono" style="cursor:pointer;color:var(--muted)">show</summary>
+<pre>{{ s.router_prompt }}</pre></details>
+{% endif %}
+{% endblock %}

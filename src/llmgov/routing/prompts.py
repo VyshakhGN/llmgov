@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ..schemas import Case, Guideline
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 SYSTEM_PROMPT = """\
 You are a risk assessor in an online retailer's customer service system.
@@ -31,8 +31,7 @@ Judge the case on its merits. Read the message carefully: words that look
 alarming in isolation may be harmless in context, and a message with no
 alarming words may still need a human.
 
-Give a short justification. If you route to review, add a brief hint for the
-reviewer. Respond with JSON only."""
+Give a short justification. Respond with JSON only."""
 
 
 def render_case(case: Case) -> str:
@@ -52,7 +51,6 @@ condition on return: {f.return_condition.value if f.return_condition else "not y
 order value: {_fmt(f.order_value_eur)} EUR
 
 CUSTOMER:
-account age: {f"{f.customer_since_months} months" if f.customer_since_months is not None else "unknown"}
 orders placed: {_fmt(f.total_orders)}
 refunds in the last 12 months: {_fmt(f.refunds_last_12m)}
 account flags: {flags}
