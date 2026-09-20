@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ..schemas import Case, Guideline
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
 
 SYSTEM_PROMPT = """\
 You are a risk assessor in an online retailer's customer service system.
@@ -43,7 +43,7 @@ CUSTOMER MESSAGE:
 
 ORDER FACTS:
 order id: {f.order_id or "not found"}
-status: {f.order_status or "unknown"}
+status: {f.order_status.value if f.order_status else "unknown"}
 category: {f.category.value if f.category else "unknown"}
 delivered: {_fmt(f.delivered_days_ago)} days ago
 faulty on arrival: {"yes" if f.is_faulty else "no"}

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..schemas import Case, PolicyDecision
+from ..schemas import Case, OrderStatus, PolicyDecision
 
 PROMPT_VERSION = "draft-v5"
 
@@ -56,16 +56,16 @@ _INFO_BRIEF = {
 }
 
 
-def _item_is_back(order_status: str | None) -> bool:
-    return order_status == "RETURN_RECEIVED"
+def _item_is_back(order_status: OrderStatus | None) -> bool:
+    return order_status is OrderStatus.BACK_AT_WAREHOUSE
 
 
-def _item_location(order_status: str | None) -> str:
+def _item_location(order_status: OrderStatus | None) -> str:
     if order_status is None:
         return "unknown"
     if _item_is_back(order_status):
         return "back with us, received and checked"
-    if order_status == "IN_TRANSIT":
+    if order_status is OrderStatus.IN_TRANSIT:
         return "in transit, not delivered yet"
     return "with the customer"
 

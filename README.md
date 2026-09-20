@@ -32,9 +32,11 @@ refused. The numbers follow published European retail practice, with the EU
 Consumer Rights Directive as the floor.
 
 Routing guidelines are a separate thing. They say when a reply should go to a
-person. Each one records where it came from - GDPR, the EU consumer dispute
-framework, or "company policy" where we made the rule up ourselves. Roughly half
-are the latter, and the file says which.
+person, and they arrive the way a real company's policy would: as a PDF. The
+system parses the eighteen clauses out of it at startup. Each one records where
+it came from - GDPR, the EU consumer dispute framework, or "company policy" where
+we made the rule up ourselves. Nine of the eighteen cite regulation and the other
+nine say so.
 
 ## How a case flows through
 
@@ -101,21 +103,29 @@ uv run llmgov run --mode rag --top-k 10
 ```
 
 `--mode` picks one of the three above. `--top-k` sets how many guidelines the
-search hands over, and only applies to `rag`. `--no-extract` takes the order
-number from the case file instead of reading it from the message, which is
-useful for measuring what extraction costs.
+search hands over, and only applies to `rag`. 
 
 Expect about half an hour for all 30 cases. Each one is three model calls -
 reading the order number, writing the reply, judging it - and the model runs on
 the CPU.
 
 Results land in `runs/<n>-<mode>/`: `traces.jsonl` with a full record of every
-case, and `metrics.json` with the scores. Traces are never rewritten, and they
-carry the prompt versions, so an old run can still be read back and understood
-after the prompts have moved on.
+case, and `metrics.json` with the scores. Traces are never rewritten. Each one
+carries the prompt versions, the retrieval settings, and the Ollama version and
+model digest that produced it, so an old run can be read back and understood
+after everything else has moved on.
 
-Temperature is zero and the seed is fixed, so the same input gives the same
-decision every time.
+There is one more command, which scores how much of the router's stated reasoning
+its own prompt supports:
+
+```bash
+uv run llmgov judge 26-rag
+```
+
+It writes `groundedness.jsonl` beside the traces, one verdict per case with a
+quote of anything the prompt did not back up. The quotes are more use than the
+percentage.
+
 
 ## The interface
 
@@ -127,8 +137,8 @@ Then open <http://127.0.0.1:8000>. It runs the same code as the CLI, in a browse
 
 The sidebar has the data on one side and the runs on the other.
 
-**View rules, guidelines, cases, orders, customers** show the five data files.
-Useful for seeing why a case came out the way it did: the order page puts the
+**View rules, guidelines, cases, orders, customers** show what the system runs
+on. Useful for seeing why a case came out the way it did: the order page puts the
 delivery age next to the window that applies, and the customer page works out a
 refund rate, so an account that returns half of what it buys stands out.
 
@@ -157,10 +167,10 @@ Reviews are written to `reviews.jsonl`.
 ```
 data/
   cases/        test cases with a gold label, what a careful reviewer would decide
-  orders/       order facts, keyed by order id
-  customers/    account age, orders placed, refund history, fraud flags
+  store/        SQLite - the order book and the customer accounts behind it
   policy/       the return policy, as configuration
-  guidelines/   when a reply needs a human, with the source of each rule
+  guidelines/   when a reply needs a human, as a policy PDF
+  drafts/       replies pinned from one run, so later runs can reuse them
 src/llmgov/
   policy/       the rule-based decision engine
   risk/         pattern detection and PII masking
@@ -169,16 +179,27 @@ src/llmgov/
   routing/      the router, its prompts, and guideline retrieval
   evaluation/   runs cases and scores them against the gold labels
   api/          the web interface and its templates
+  loading_pdf.py  pulls the eighteen clauses out of the policy PDF
+  store.py      reads the order book and the accounts out of SQLite
 ```
 
 ## Evaluation
 
 Every decision is checked against a hand-written answer key.
 
-Two numbers matter. False negatives are the risky replies that got sent anyway,
-which is the error that does real damage. Review rate is how much human work the
-system creates. You can drive false negatives to zero by sending everything to a
-person, but then nothing has been automated.
+Three numbers lead. **Coverage** is how much went out without a human.
+**Selective risk** is how much of that was wrong - misses divided by what was
+actually released, not by every case, because the ones correctly handed to a
+person were never at risk. **Groundedness** is how much of the router's stated
+reasoning its own prompt supports, judged by a second model.
+
+Those first two only make sense as a pair. Send nothing and the risk is zero.
+Send everything and the coverage is perfect. Either one on its own can be gamed.
+
+
+Precision, recall, F1 and accuracy are still there, further down. F1 counts a
+risky reply that went out as costing the same as two wasted minutes, and most of
+this project is an argument that it doesn't.
 
 Order extraction is scored on its own. Each case records which order it is really
 about, so whatever the model pulled out of the message can be checked against it.
@@ -186,7 +207,5 @@ That field never feeds into the case itself.
 
 ## Future Work
 
-Several enhancements are planned, including a larger case set, fine-tuning the
-model and comparing it against retrieval, guidelines that can be swapped and
-re-indexed without a restart, and eventually splitting the components into
-separate services. Stay tuned!
+A larger case set, then separate test and Validation sets for fine Tuning. Fine-tuning the model and
+comparing it against Retrieval. 

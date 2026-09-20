@@ -21,7 +21,7 @@
 <div class="panel"><dl>
 {% set f = case.system_facts if case else none %}
 {% if f %}
-  <dt>status</dt><dd class="mono">{{ f.order_status or "-" }}</dd>
+  <dt>status</dt><dd class="mono">{{ f.order_status.value if f.order_status else "-" }}</dd>
   <dt>category</dt><dd class="mono">{{ f.category.value if f.category else "unknown" }}</dd>
   <dt>delivered</dt><dd class="mono">{{ f.delivered_days_ago if f.delivered_days_ago is not none else "unknown" }} days ago</dd>
   <dt>faulty</dt><dd class="mono">{{ "yes" if f.is_faulty else "no" }}</dd>

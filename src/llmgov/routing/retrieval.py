@@ -19,10 +19,6 @@ _MIN_PROBE = 12
 RRF_K = 60
 
 
-def case_query(case: Case) -> str:
-    return _flat(case.user_message)
-
-
 def case_probes(case: Case) -> list[str]:
     probes = [_flat(case.user_message)]
     probes += _sentences(case.user_message)
@@ -55,6 +51,12 @@ class GuidelineIndex:
         self.model_name = model_name
         self.client = ollama.Client(host=host)
 
+        self.config = {
+            "embed_model": model_name,
+            "rrf_k": RRF_K,
+            "min_probe_chars": _MIN_PROBE,
+            "corpus_size": len(guidelines),
+        }
         vectors = self._embed([DOC_PREFIX + _flat(g.text) for g in guidelines])
         self.index = faiss.IndexFlatIP(vectors.shape[1])
         self.index.add(vectors)
@@ -113,7 +115,7 @@ def _facts_probe(f: SystemFacts) -> str:
         bits.append("no order could be identified from the message")
     else:
         if f.order_status:
-            bits.append("order status is " + f.order_status.lower().replace("_", " "))
+            bits.append("order status is " + f.order_status.value.lower().replace("_", " "))
         if f.return_condition:
             bits.append("the item came back " + f.return_condition.value)
         if f.is_faulty:

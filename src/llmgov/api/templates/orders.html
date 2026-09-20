@@ -16,7 +16,7 @@
 <tr>
   <td class="mono" style="color:var(--white);font-weight:600">{{ oid }}</td>
   <td class="mono dim">{{ f.customer_id }}</td>
-  <td class="mono dim" style="font-size:.78rem">{{ f.order_status }}</td>
+  <td class="mono dim" style="font-size:.78rem">{{ f.order_status.value if f.order_status else "-" }}</td>
   <td>{{ f.category.value if f.category else "-" }}</td>
   <td class="num">{{ f.delivered_days_ago if f.delivered_days_ago is not none else "-" }}</td>
   <td class="num dim">{{ policy.window_for(f) or "-" }}</td>

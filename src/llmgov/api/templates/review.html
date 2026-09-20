@@ -38,7 +38,7 @@ You can approve, edit, or reject the decision.</p>
               gap:.45rem;margin-bottom:1rem">
     <div class="stat"><b style="font-size:.95rem">{{ fa.order_id or "not found" }}</b><span>order</span></div>
     <div class="stat"><b style="font-size:.95rem">{{ fa.category.value if fa.category else "unknown" }}</b><span>category</span></div>
-    <div class="stat"><b style="font-size:.95rem">{{ fa.delivered_days_ago if fa.delivered_days_ago is not none else "?" }} d</b><span>since delivery ({{ fa.order_status or "?" }})</span></div>
+    <div class="stat"><b style="font-size:.95rem">{{ fa.delivered_days_ago if fa.delivered_days_ago is not none else "?" }} d</b><span>since delivery ({{ fa.order_status.value if fa.order_status else "?" }})</span></div>
     <div class="stat"><b style="font-size:.95rem">{{ fa.order_value_eur }} EUR</b><span>order value</span></div>
     <div class="stat"><b style="font-size:.95rem">{{ "faulty" if fa.is_faulty else (fa.return_condition.value if fa.return_condition else "ok") }}</b><span>condition</span></div>
     <div class="stat"><b style="font-size:.95rem">{{ fa.total_orders }} / {{ fa.refunds_last_12m }}</b><span>orders / refunds 12m</span></div>

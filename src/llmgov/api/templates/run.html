@@ -6,13 +6,42 @@
 <p class="sub">{{ metrics.n }} cases scored</p>
 
 <div class="panel stats">
-  <div class="stat"><b>{{ "%.3f"|format(metrics.precision) }}</b><span>precision</span></div>
-  <div class="stat"><b>{{ "%.3f"|format(metrics.recall) }}</b><span>recall</span></div>
-  <div class="stat"><b>{{ "%.3f"|format(metrics.f1) }}</b><span>F1</span></div>
-  <div class="stat"><b>{{ "%.3f"|format(metrics.accuracy) }}</b><span>accuracy</span></div>
-  <div class="stat"><b>{{ metrics.fn }}</b><span>missed</span></div>
-  <div class="stat"><b>{{ metrics.fp }}</b><span>over-flagged</span></div>
-  <div class="stat"><b>{{ "%.0f%%"|format(metrics.review_rate * 100) }}</b><span>review rate</span></div>
+  <div class="stat"><b>{{ "%.0f%%"|format(metrics.coverage * 100) }}</b>
+    <span>coverage - sent without a human ({{ metrics.tn + metrics.fn }} of {{ metrics.n }})</span></div>
+  <div class="stat"><b>{{ "%.1f%%"|format(metrics.selective_risk * 100) }}</b>
+    <span>selective risk - of those, wrong ({{ metrics.fn }})</span></div>
+  <div class="stat">
+    <b>{% if metrics.groundedness is not none %}{{ "%.0f%%"|format(metrics.groundedness * 100) }}{% else %}-{% endif %}</b>
+    <span>groundedness - of its reasons, fully supported by what it was given</span></div>
+</div>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ metrics.fn }}</b><span>missed - of {{ metrics.tp + metrics.fn }} needing a human</span></div>
+  <div class="stat"><b>{{ metrics.fp }}</b><span>over-flagged - of {{ metrics.tn + metrics.fp }} that were fine</span></div>
+  <div class="stat"><b>{{ metrics.always_send_correct }}/{{ metrics.n }}</b><span>always-send baseline</span></div>
+  <div class="stat"><b>{{ metrics.always_review_correct }}/{{ metrics.n }}</b><span>always-review baseline</span></div>
+</div>
+
+{% if metrics.cost_by_ratio %}
+<div class="panel">
+  <p class="dim" style="font-size:.78rem;margin:0 0 .5rem">Total cost if a missed risky reply is
+    n times worse than an unnecessary review. Lower is better; the ranking against other runs
+    should not depend on where you set n.</p>
+  <div class="stats">
+  {% for ratio, cost in metrics.cost_by_ratio.items() %}
+    <div class="stat"><b>{{ cost }}</b><span>at {{ ratio }}:1</span></div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <p class="dim" style="font-size:.78rem;margin:0">Reported for comparability, not led on:
+    precision <b style="color:var(--ink)">{{ "%.3f"|format(metrics.precision) }}</b> ·
+    recall <b style="color:var(--ink)">{{ "%.3f"|format(metrics.recall) }}</b> ·
+    F1 <b style="color:var(--ink)">{{ "%.3f"|format(metrics.f1) }}</b> ·
+    accuracy <b style="color:var(--ink)">{{ "%.3f"|format(metrics.accuracy) }}</b> ·
+    review rate <b style="color:var(--ink)">{{ "%.0f%%"|format(metrics.review_rate * 100) }}</b></p>
 </div>
 
 {% if summary.flagged %}
@@ -41,7 +70,8 @@
       {% else %}<span class="pill p-amber">{{ r.category }}</span>{% endif %}</td>
   <td class="num dim">{{ r.latency }}</td>
   <td>{% if r.hit is none %}{% elif r.hit %}<span class="pill p-green">ok</span>
-      {% else %}<span class="pill p-red">miss</span>{% endif %}</td>
+      {% elif r.gold == "NEEDS_REVIEW" %}<span class="pill p-red">missed</span>
+      {% else %}<span class="pill p-amber">over-flagged</span>{% endif %}</td>
 </tr>
 {% endfor %}
 </tbody></table></div>

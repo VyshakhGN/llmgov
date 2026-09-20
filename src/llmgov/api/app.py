@@ -24,7 +24,15 @@ from ..cli import (
     build_router,
 )
 from ..drafting import Drafter
-from ..evaluation import new_run_id, run_cases, score, write_traces
+from ..evaluation import (
+    new_run_id,
+    read_groundedness,
+    read_traces,
+    run_cases,
+    score,
+    write_traces,
+)
+from ..evaluation.metrics import COST_RATIOS
 from ..extraction import OrderExtractor
 from ..loading import load_cases, load_customers, load_guidelines, load_orders
 from ..policy import load_policy
@@ -95,6 +103,30 @@ def _review_summary(run: Path, flagged: int) -> dict[str, int]:
     }
 
 
+def _metrics(run: Path) -> dict[str, Any]:
+    """Recompute from traces so runs written before a metric existed still carry it."""
+    try:
+        m = score(read_traces(run / "traces.jsonl"), groundedness=read_groundedness(run))
+        return m.to_dict()
+    except (FileNotFoundError, ValueError):
+        return _backfill(json.loads((run / "metrics.json").read_text(encoding="utf-8")))
+
+
+def _backfill(m: dict[str, Any]) -> dict[str, Any]:
+    """Derive the newer fields from a stored confusion matrix, for runs too old to rescore."""
+    tp, fp, tn, fn = (m.get(k, 0) for k in ("tp", "fp", "tn", "fn"))
+    sent = tn + fn
+    return {
+        **m,
+        "coverage": sent / m["n"] if m.get("n") else 0.0,
+        "selective_risk": fn / sent if sent else 0.0,
+        "groundedness": None,
+        "always_send_correct": tn + fp,
+        "always_review_correct": tp + fn,
+        "cost_by_ratio": {str(w): w * fn + fp for w in COST_RATIOS},
+    }
+
+
 def _traces(run: Path) -> list[dict[str, Any]]:
     path = run / "traces.jsonl"
     if not path.exists():
@@ -106,15 +138,14 @@ def _traces(run: Path) -> list[dict[str, Any]]:
 def runs_index(request: Request):
     rows = []
     for d in _run_dirs():
-        m = json.loads((d / "metrics.json").read_text(encoding="utf-8"))
-        rows.append({"id": d.name, "mode": d.name.split("-", 1)[1], "m": m})
+        rows.append({"id": d.name, "mode": d.name.split("-", 1)[1], "m": _metrics(d)})
     return templates.TemplateResponse(request, "runs.html", {"runs": rows})
 
 
 @app.get("/runs/{run_id}", response_class=HTMLResponse)
 def run_detail(request: Request, run_id: str):
     run = RUNS_DIR / run_id
-    metrics = json.loads((run / "metrics.json").read_text(encoding="utf-8"))
+    metrics = _metrics(run)
     rows = []
     for t in _traces(run):
         gold = t.get("gold") or {}
@@ -126,7 +157,7 @@ def run_detail(request: Request, run_id: str):
                 "action": t["decision"]["action"],
                 "category": t["decision"]["risk_category"],
                 "hit": gold.get("action") == t["decision"]["action"] if gold else None,
-                "rule": t["stages"]["policy_rule"],
+                "rule": (t.get("stages") or {}).get("policy_rule", ""),
                 "latency": round((t.get("latency_ms") or 0) / 1000, 1),
             }
         )
@@ -238,11 +269,6 @@ def orders_page(request: Request):
 
 @app.get("/customers", response_class=HTMLResponse)
 def customers_page(request: Request):
-    orders = _dataset()["orders"]
-    owned: dict[str, list[str]] = {}
-    for oid, f in orders.items():
-        if f.customer_id:
-            owned.setdefault(f.customer_id, []).append(oid)
     rows = []
     for cid, raw in sorted(load_customers(DEFAULT_CUSTOMERS).items()):
         total = raw.get("total_orders") or 0
@@ -252,7 +278,6 @@ def customers_page(request: Request):
                 "id": cid,
                 **raw,
                 "rate": round(refunds / total, 2) if total else None,
-                "owns": owned.get(cid, []),
             }
         )
     return templates.TemplateResponse(request, "customers.html", {"customers": rows})

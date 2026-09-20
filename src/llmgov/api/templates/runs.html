@@ -3,25 +3,28 @@
 {% block n4 %}on{% endblock %}
 {% block body %}
 <h2 class="page">Runs</h2>
-<p class="sub">{{ runs|length }} recorded runs. Only cases carrying a gold label are scored.</p>
+<p class="sub">{{ runs|length }} recorded runs. Only cases carrying a gold label are scored.
+  Coverage is how much went out without a human, selective risk how much of that was wrong, and groundedness how much of the router's stated reasoning its own prompt supports.</p>
 <div class="panel tight scroll"><table>
-<thead><tr><th>run</th><th>mode</th><th class="num">cases</th><th class="num">precision</th>
-  <th class="num">recall</th><th class="num">F1</th><th class="num">accuracy</th>
-  <th class="num">missed</th><th class="num">over-flagged</th><th class="num">review rate</th></tr></thead>
+<thead><tr><th>run</th><th>mode</th><th class="num">cases</th>
+  <th class="num">coverage</th><th class="num">selective risk</th>
+  <th class="num">groundedness</th>
+  <th class="num">missed</th><th class="num">over-flagged</th></tr></thead>
 <tbody>
 {% for r in runs %}
 <tr>
   <td class="mono"><a href="/runs/{{ r.id }}">{{ r.id }}</a></td>
   <td><span class="pill {{ 'p-red' if r.mode == 'rag' else 'p-blue' }}">{{ r.mode }}</span></td>
   <td class="num">{{ r.m.n }}</td>
-  <td class="num">{{ "%.3f"|format(r.m.precision) }}</td>
-  <td class="num">{{ "%.3f"|format(r.m.recall) }}</td>
-  <td class="num">{{ "%.3f"|format(r.m.f1) }}</td>
-  <td class="num">{{ "%.3f"|format(r.m.accuracy) }}</td>
+  <td class="num">{{ "%.0f%%"|format(r.m.coverage * 100) }}</td>
+  <td class="num">{{ "%.1f%%"|format(r.m.selective_risk * 100) }}</td>
+  <td class="num">{% if r.m.groundedness is not none %}{{ "%.0f%%"|format(r.m.groundedness * 100) }}{% else %}<span class="dim">-</span>{% endif %}</td>
   <td class="num">{{ r.m.fn }}</td>
   <td class="num">{{ r.m.fp }}</td>
-  <td class="num">{{ "%.0f%%"|format(r.m.review_rate * 100) }}</td>
 </tr>
 {% endfor %}
 </tbody></table></div>
+<p class="sub" style="margin-top:.6rem">Precision, recall, F1 and accuracy are on each run's own
+  page. They are not shown here because they weight a missed risky reply the same as an
+  unnecessary review, which is the assumption this project argues against.</p>
 {% endblock %}

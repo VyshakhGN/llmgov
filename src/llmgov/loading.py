@@ -1,35 +1,30 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 import yaml
+from .loading_pdf import load_guidelines_pdf
 from .policy import PolicyEngine
-from .schemas import Case, Guideline, SystemFacts
-
-
-@dataclass(frozen=True)
-class GuidelineCorpus:
-    guidelines: list[Guideline]
+from .schemas import Case, GuidelineCorpus, SystemFacts
+from .store import read_customers, read_orders
 
 
 def load_guidelines(path: str | Path) -> GuidelineCorpus:
-    doc = _read_yaml(path)
-    return GuidelineCorpus(guidelines=[Guideline(**g) for g in doc["guidelines"]])
+    return load_guidelines_pdf(path)
 
 
 def load_customers(path: str | Path) -> dict[str, dict[str, Any]]:
-    return _read_yaml(path)["customers"]
+    return read_customers(path)
 
 
 def load_orders(
     path: str | Path,
     customers: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, SystemFacts]:
-    doc = _read_yaml(path)
+    rows = read_orders(path)
     customers = customers or {}
     orders = {}
 
-    for oid, facts in doc["orders"].items():
+    for oid, facts in rows.items():
         facts = dict(facts)
         customer_id = facts.get("customer_id")
         if customer_id is not None:
@@ -39,6 +34,11 @@ def load_orders(
         orders[oid] = SystemFacts(order_id=oid, **facts)
 
     return orders
+
+
+def load_drafts(path: str | Path) -> dict[str, str]:
+    """Replies pinned from an earlier run, so the router can be compared in isolation."""
+    return _read_yaml(path)["drafts"]
 
 
 def load_cases(

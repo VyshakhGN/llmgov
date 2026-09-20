@@ -51,6 +51,9 @@ class LlmRouter:
         self.guidelines = guidelines
         self.index = index
         self.top_k = top_k
+        self.retriever_config = (
+            {"top_k": top_k, **index.config} if index is not None else {}
+        )
         self.mask_pii = mask_pii
         self.seed = seed
         self.think = think

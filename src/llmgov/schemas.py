@@ -46,6 +46,11 @@ class Guideline(BaseModel):
     source: str = ""
 
 
+class GuidelineCorpus(BaseModel):
+
+    guidelines: list[Guideline]
+
+
 class Category(str, Enum):
 
     CLOTHING = "clothing"
@@ -58,9 +63,17 @@ class ReturnCondition(str, Enum):
     DAMAGED = "damaged"
 
 
+class OrderStatus(str, Enum):
+    """Where the item physically is. Named from the retailer's point of view."""
+
+    IN_TRANSIT = "IN_TRANSIT"
+    DELIVERED = "DELIVERED"
+    BACK_AT_WAREHOUSE = "BACK_AT_WAREHOUSE"
+
+
 class SystemFacts(BaseModel):
     order_id: str | None = None
-    order_status: str | None = None
+    order_status: OrderStatus | None = None
     category: Category | None = None
     delivered_days_ago: int | None = None
     is_faulty: bool = False
@@ -121,7 +134,6 @@ class RoutingDecision(BaseModel):
     risk_category: RiskCategory
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     justification: str = ""
-    reviewer_hints: str = ""
     retrieved_guidelines: list[RetrievedGuideline] = Field(default_factory=list)
     raw_model_output: str | None = None
     parse_error: str | None = None
@@ -132,7 +144,6 @@ class HumanReview(BaseModel):
     reviewer_id: str
     outcome: Literal["APPROVED_UNCHANGED", "APPROVED_EDITED", "REJECTED"]
     edited_response: str | None = None
-    reviewer_agreed_with_risk_category: bool | None = None
     notes: str = ""
     reviewed_at: datetime
 
@@ -170,6 +181,7 @@ class TraceRecord(BaseModel):
     seed: int | None = None
     guideline_corpus_version: str = "n/a"
     retriever_config: dict[str, Any] = Field(default_factory=dict)
+    environment: dict[str, Any] = Field(default_factory=dict)
 
     stages: PipelineStages = Field(default_factory=PipelineStages)
     risk_signals: RiskSignals = Field(default_factory=RiskSignals)
@@ -180,6 +192,4 @@ class TraceRecord(BaseModel):
     latency_ms: float | None = None
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
-    cost_usd: float | None = None
     gold: GoldLabel | None = None
-    human_review: HumanReview | None = None

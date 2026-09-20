@@ -10,6 +10,7 @@ from ..extraction import OrderExtractor
 from ..policy import PolicyEngine
 from ..risk import detect_risk_signals
 from ..routing.base import Router, fail_safe
+from ..environment import describe
 from ..schemas import Case, PipelineStages, SystemFacts, TraceRecord
 
 
@@ -31,6 +32,7 @@ def run_cases(
     progress: bool = True,
     policy: PolicyEngine | None = None,
     drafter: Drafter | None = None,
+    frozen_drafts: dict[str, str] | None = None,
     extractor: OrderExtractor | None = None,
     orders: dict[str, SystemFacts] | None = None,
     report: Callable[[str], None] | None = None,
@@ -39,6 +41,18 @@ def run_cases(
     cases = list(cases)
     total = len(cases)
     traces = []
+    env = describe(
+        *{
+            m
+            for m in (
+                getattr(router, "model_name", None),
+                getattr(drafter, "model_name", None),
+                getattr(extractor, "model_name", None),
+                getattr(getattr(router, "index", None), "model_name", None),
+            )
+            if m
+        }
+    )
     emit = report or (lambda text: print(text, end="", flush=True))
 
     for i, case in enumerate(cases, start=1):
@@ -67,7 +81,12 @@ def run_cases(
             )
 
         generated_draft = None
-        if drafter is not None:
+        if frozen_drafts is not None and case.case_id in frozen_drafts:
+            generated_draft = frozen_drafts[case.case_id]
+            case = case.model_copy(update={"draft_response": generated_draft})
+            if progress:
+                emit("pinned draft... ")
+        elif drafter is not None:
             if progress:
                 emit("drafting... ")
             generated_draft = drafter.write(case)
@@ -111,7 +130,9 @@ def run_cases(
             masked_message=getattr(router, "last_masked_text", ""),
             router_prompt=getattr(router, "last_prompt", ""),
             generated_draft=generated_draft,
-            draft_prompt_version=drafter.prompt_version if drafter else None,
+            draft_prompt_version=(
+                "pinned" if frozen_drafts else (drafter.prompt_version if drafter else None)
+            ),
             extracted_order_id=extracted_order_id,
             expected_order_id=case.order_id,
             extract_prompt_version=extractor.prompt_version if extractor else None,
@@ -127,6 +148,8 @@ def run_cases(
                 prompt_version=getattr(router, "prompt_version", "n/a"),
                 model_name=getattr(router, "model_name", "n/a"),
                 model_params=getattr(router, "model_params", {}),
+                retriever_config=getattr(router, "retriever_config", {}),
+                environment=env,
                 seed=getattr(router, "seed", None),
                 stages=stages,
                 risk_signals=signals,

@@ -1,0 +1,99 @@
+frozen_at: '2026-09-20'
+source_run: 26-rag
+draft_prompt_version: draft-v5
+model_name: qwen3.5:4b
+model_params:
+  temperature: 0.0
+  seed: 0
+  num_ctx: 8192
+  think: false
+environment:
+  ollama: 0.34.2
+  python: 3.12.13
+  platform: Windows-11-10.0.26100-SP0
+  models:
+    qwen3.5:4b: 2a654d98e6fb
+    nomic-embed-text: 0a109f422b47
+note: Replies generated once and pinned, so the router can be compared across configurations without the
+  drafter moving underneath it. Regenerate only if the drafter prompt changes deliberately.
+drafts:
+  C-001: Your refund of 74.00 EUR has been approved and will be issued to your original payment method.
+    Please allow up to 5 working days for the funds to reach your account.
+  C-002: We are sorry, but we cannot process a refund for your order as it is outside the 14-day return
+    window for electronics. There will be no refund issued for this item.
+  C-003: Your refund of 129.00 EUR has been approved and will be issued to your original payment method
+    within 5 working days. The item is back with us and checked, so we are processing this now.
+  C-004: We are sorry for the frustration regarding your order A-04 and will issue a full refund of 215.00
+    EUR to your original payment method once we receive and check the item. The refund should reach you
+    within 5 working days after it is processed.
+  C-005: We are sorry, but we cannot process a refund for your order as it is outside the 14-day return
+    window for electronics. Since the return period has passed, there will be no refund issued to your
+    original payment method.
+  C-006: We are happy to approve your refund of 45.00 EUR for order A-06. Please send the item back so
+    that we can issue the refund to your original payment method, which will be processed within 5 working
+    days once received.
+  C-007: I'm sorry to hear about your mother, but unfortunately we cannot process a refund for this order
+    as it is outside the 14-day return window for electronics. There will be no refund issued for this
+    transaction.
+  C-008: To process your return request, I need your order number as it is the only way to identify your
+    purchase. Could you please provide that so I can assist you further?
+  C-009: To process your request, I need your order number as we cannot locate your order in our system
+    without it. Please provide this so we can check the details and assist you further.
+  C-010: We are sorry you have had to wait so long for a response. To process your return request, we
+    need your order number as it is the only way to identify your purchase. Please provide this detail
+    and we will get back to you immediately.
+  C-011: We are currently tracking your order A-08 and have received an update on its delivery status.
+    Since the item has not yet been delivered, we cannot process a return or refund at this time. We will
+    keep you updated as soon as the delivery is complete.
+  C-012: We are currently tracking your order A-09 and have not yet received confirmation that it has
+    been delivered. Once we have more information about the delivery date, we will let you know if a return
+    is possible. We will get back to you as soon as we hear from the carrier.
+  C-013: Thank you for contacting us regarding your order A-10. Since we need to know which specific items
+    you would like to return, please let us know exactly what you are sending back so we can process your
+    request.
+  C-014: We have processed a partial refund of 44.50 EUR for your order A-11 because the item arrived
+    damaged. The refund will be issued to your original payment method and should reach your account within
+    5 working days.
+  C-015: We have processed a partial refund of 72.50 EUR for your order because the boots were damaged
+    upon return. The full amount will be refunded once the item is fully checked and cleared, which should
+    happen within 5 working days.
+  C-016: We have processed a partial refund of 105.00 EUR because the item arrived damaged. The full amount
+    will not be returned due to the loss in value, but the refund has been issued and should reach your
+    original payment method within 5 working days.
+  C-017: We have processed a partial refund of 65.00 EUR for your order A-14 due to the damage found on
+    the sleeve. The full amount will not be refunded as the item was returned with a defect, but the remaining
+    value has been issued to your original payment method within 5 working days.
+  C-018: We are approving your refund of 45.00 EUR because faulty goods are covered by our guarantee.
+    Since we do not yet have the item, the refund will be issued once it arrives and is checked, at which
+    point it should reach you within 5 working days.
+  C-019: We are sorry to hear that your jacket is faulty and will issue a full refund of 99.00 EUR to
+    your original payment method once we receive and check the item. The refund should reach you within
+    5 working days after it is processed.
+  C-020: We are sorry to hear that your headphones are faulty and will issue a full refund of 79.00 EUR
+    to your original payment method. Since the item is with you, please send it back to us so we can check
+    it before processing the refund, which will be issued within 5 working days once received.
+  C-021: We've approved your return for the shirt from order A-18. The refund of 62.00 EUR will be issued
+    once we receive and check the item, and it should reach you within 5 working days.
+  C-022: We are happy to approve your return for the bluetooth speaker from order A-19. Please send the
+    item back to us, and once it has been received and checked, we will issue a refund of 139.00 EUR to
+    your original payment method within 5 working days.
+  C-023: We've approved your return for the scarf from order A-20. Please send it back with us, and once
+    we receive and check it, a full refund of 54.00 EUR will be issued to your original payment method
+    within 5 working days.
+  C-024: Your refund of 78.00 EUR will be processed once your return arrives at our warehouse and is checked.
+    The funds should reach your original payment method within 5 working days.
+  C-025: We are sorry to hear that your order A-22 was never delivered. Since you are still within the
+    return window and we do not yet have the item, we will issue a refund of 95.00 EUR once it reaches
+    us and has been checked. The refund should reach your original payment method within 5 working days.
+  C-026: We are sorry, but we cannot process a refund for your order as it is outside the 30-day return
+    window. There will be no refund issued for this item.
+  C-027: We are sorry, but we cannot process a refund for your order as it is outside the 14-day return
+    window for electronics. There will be no refund issued for this item.
+  C-028: We are sorry, but we cannot process a refund for your jumper as it was delivered 31 days ago,
+    which is outside the 30-day return window for clothing items. There will be no refund issued for this
+    order.
+  C-029: We regret that we cannot process a refund for order A-26 as the 14-day return window has passed
+    since delivery. Unfortunately, there will be no refund issued for this transaction.
+  C-030: We are sorry to hear that your coat has not fitted, but we must inform you that the return window
+    for clothing items is 30 days from delivery, which has already passed since your order was delivered
+    52 days ago. Unfortunately, there will be no refund for this order.
