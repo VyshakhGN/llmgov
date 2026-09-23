@@ -6,7 +6,6 @@ from .drafting import Drafter
 from .extraction import OrderExtractor
 from .evaluation import (
     format_report,
-    judge_run,
     new_run_id,
     run_cases,
     score,
@@ -107,26 +106,7 @@ def main() -> None:
     run.add_argument("--guidelines", type=Path, default=DEFAULT_GUIDELINES)
     run.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
 
-    judge = sub.add_parser(
-        "judge", help="score justification groundedness for a finished run"
-    )
-    judge.add_argument("run_id", help="a directory name under runs/, e.g. 20-rag")
-    judge.add_argument("--model", default=DEFAULT_MODEL)
-    judge.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
-
     args = parser.parse_args()
-
-    if args.command == "judge":
-        run_dir = args.runs_dir / args.run_id
-        if not (run_dir / "traces.jsonl").exists():
-            raise SystemExit(f"no traces in {run_dir}")
-        mean = judge_run(run_dir, model_name=args.model)
-        if mean is None:
-            return
-        print()
-        print(f"groundedness  {mean:.1%}")
-        print(f"written to {run_dir / 'groundedness.jsonl'}")
-        return
 
     orders = load_orders(args.orders, load_customers(args.customers))
     policy = load_policy(args.policy)
@@ -156,8 +136,6 @@ def main() -> None:
 
     print(format_report(metrics, args.mode))
     print(f"\nwritten to {out}")
-    if args.mode != "prompt_only":
-        print(f"score groundedness with:  uv run llmgov judge {run_id}")
 
 
 if __name__ == "__main__":

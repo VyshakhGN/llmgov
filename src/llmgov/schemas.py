@@ -133,6 +133,7 @@ class RoutingDecision(BaseModel):
     action: Action
     risk_category: RiskCategory
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    auto_send_probability: float | None = Field(default=None, ge=0.0, le=1.0)
     justification: str = ""
     retrieved_guidelines: list[RetrievedGuideline] = Field(default_factory=list)
     raw_model_output: str | None = None

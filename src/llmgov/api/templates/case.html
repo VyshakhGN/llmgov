@@ -75,6 +75,7 @@
   <dl>
     <dt>why</dt><dd>{{ t.decision.justification }}</dd>
     <dt>confidence</dt><dd class="mono">{{ t.decision.confidence }}</dd>
+    <dt>P(AUTO_SEND)</dt><dd class="mono">{% if t.decision.auto_send_probability is not none %}{{ "%.3f"|format(t.decision.auto_send_probability) }}{% else %}-{% endif %}</dd>
     <dt>mode</dt><dd class="mono">{{ t.mode }} · {{ t.model_name }} · {{ "%.1f"|format((t.latency_ms or 0)/1000) }}s</dd>
   </dl>
 </div>

@@ -17,7 +17,7 @@ class Metrics:
     fn: int
     coverage: float
     selective_risk: float
-    groundedness: float | None
+    aurc: float | None
     precision: float
     recall: float
     f1: float
@@ -37,10 +37,24 @@ def _ratio(num: float, den: float) -> float:
     return num / den if den else 0.0
 
 
-def score(
-    traces: Sequence[TraceRecord],
-    groundedness: float | None = None,
-) -> Metrics:
+def _aurc(ranked_review: Sequence[bool]) -> float:
+    missed = 0
+    total = 0.0
+    for sent, needs_review in enumerate(ranked_review, start=1):
+        missed += needs_review
+        total += missed / sent
+    return total / len(ranked_review)
+
+
+def _risk_coverage(scored: Sequence[TraceRecord]) -> float | None:
+    probs = [t.decision.auto_send_probability for t in scored]
+    if any(p is None for p in probs):
+        return None
+    gold_review = [t.gold.action is Action.NEEDS_REVIEW for t in scored]
+    return _aurc([g for _, g in sorted(zip(probs, gold_review), key=lambda x: -x[0])])
+
+
+def score(traces: Sequence[TraceRecord]) -> Metrics:
     scored = [t for t in traces if t.gold is not None]
     if not scored:
         raise ValueError("no traces carry a gold label")
@@ -64,6 +78,7 @@ def score(
     sent = tn + fn
     precision = _ratio(tp, tp + fp)
     recall = _ratio(tp, tp + fn)
+    aurc = _risk_coverage(scored)
 
     return Metrics(
         n=n,
@@ -73,7 +88,7 @@ def score(
         fn=fn,
         coverage=_ratio(sent, n),
         selective_risk=_ratio(fn, sent),
-        groundedness=groundedness,
+        aurc=aurc,
         precision=precision,
         recall=recall,
         f1=_ratio(2 * precision * recall, precision + recall) if (precision + recall) else 0.0,
@@ -87,16 +102,17 @@ def score(
     )
 
 
+def _pct(value: float | None) -> str:
+    return f"{value:.1%}" if value is not None else "n/a"
+
+
 def format_report(m: Metrics, mode: str) -> str:
-    grounded = (
-        f"{m.groundedness:.1%}" if m.groundedness is not None else "not judged"
-    )
     lines = [
         f"mode: {mode}    cases: {m.n}",
         "",
         f"  coverage             {m.coverage:.1%}     sent without a human ({m.tn + m.fn} of {m.n})",
         f"  selective risk       {m.selective_risk:.1%}     of those, wrong ({m.fn})",
-        f"  groundedness         {grounded}     of its reasons, fully supported",
+        f"  AURC                 {_pct(m.aurc)}     selective risk averaged over every cut-off",
         "",
         f"  unsafe auto-sends    {m.fn}     of {m.tp + m.fn} that needed a human",
         f"  unnecessary reviews  {m.fp}     of {m.tn + m.fp} that were fine",

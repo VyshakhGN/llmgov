@@ -1,5 +1,7 @@
 from __future__ import annotations
 import json
+import math
+import re
 from typing import Any
 import ollama
 
@@ -17,6 +19,8 @@ from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_user_prompt
 from .retrieval import DEFAULT_K, GuidelineIndex, case_probes
 
 DEFAULT_HOST = "http://localhost:11434"
+TOP_LOGPROBS = 10
+ACTION_VALUE = re.compile(r'"action"\s*:\s*"')
 
 ROUTER_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -94,6 +98,8 @@ class LlmRouter:
                 "num_ctx": 8192,
                 "num_predict": 400,
             },
+            logprobs=True,
+            top_logprobs=TOP_LOGPROBS,
             **extra,
         )
 
@@ -104,6 +110,11 @@ class LlmRouter:
 
         decision = _parse(response["message"]["content"])
         decision.retrieved_guidelines = retrieved
+        decision.auto_send_probability = (
+            0.0
+            if decision.parse_error
+            else _auto_send_probability(response["message"]["content"], response.logprobs)
+        )
         return decision
 
     def _mask(self, case: Case) -> Case:
@@ -152,6 +163,33 @@ def _parse(raw: str) -> RoutingDecision:
         justification=str(data.get("justification", "")).strip(),
         raw_model_output=raw,
     )
+
+
+def _auto_send_probability(content: str, logprobs: list[Any] | None) -> float | None:
+    match = ACTION_VALUE.search(content)
+    if match is None or not logprobs:
+        return None
+
+    start = match.end()
+    offset = 0
+    for token in logprobs:
+        end = offset + len(token.token)
+        if end > start:
+            lead = token.token[: start - offset]
+            mass = {Action.AUTO_SEND: 0.0, Action.NEEDS_REVIEW: 0.0}
+            for alt in token.top_logprobs or []:
+                if not alt.token.startswith(lead):
+                    continue
+                rest = alt.token[len(lead):]
+                if not rest:
+                    continue
+                for action in mass:
+                    if action.value.startswith(rest):
+                        mass[action] += math.exp(alt.logprob)
+            total = sum(mass.values())
+            return mass[Action.AUTO_SEND] / total if total else None
+        offset = end
+    return None
 
 
 def check_available(model_name: str, host: str = DEFAULT_HOST) -> None:

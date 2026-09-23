@@ -26,7 +26,6 @@ from ..cli import (
 from ..drafting import Drafter
 from ..evaluation import (
     new_run_id,
-    read_groundedness,
     read_traces,
     run_cases,
     score,
@@ -106,7 +105,7 @@ def _review_summary(run: Path, flagged: int) -> dict[str, int]:
 def _metrics(run: Path) -> dict[str, Any]:
     """Recompute from traces so runs written before a metric existed still carry it."""
     try:
-        m = score(read_traces(run / "traces.jsonl"), groundedness=read_groundedness(run))
+        m = score(read_traces(run / "traces.jsonl"))
         return m.to_dict()
     except (FileNotFoundError, ValueError):
         return _backfill(json.loads((run / "metrics.json").read_text(encoding="utf-8")))
@@ -120,7 +119,7 @@ def _backfill(m: dict[str, Any]) -> dict[str, Any]:
         **m,
         "coverage": sent / m["n"] if m.get("n") else 0.0,
         "selective_risk": fn / sent if sent else 0.0,
-        "groundedness": None,
+        "aurc": None,
         "always_send_correct": tn + fp,
         "always_review_correct": tp + fn,
         "cost_by_ratio": {str(w): w * fn + fp for w in COST_RATIOS},

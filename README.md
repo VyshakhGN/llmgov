@@ -115,17 +115,6 @@ carries the prompt versions, the retrieval settings, and the Ollama version and
 model digest that produced it, so an old run can be read back and understood
 after everything else has moved on.
 
-There is one more command, which scores how much of the router's stated reasoning
-its own prompt supports:
-
-```bash
-uv run llmgov judge 26-rag
-```
-
-It writes `groundedness.jsonl` beside the traces, one verdict per case with a
-quote of anything the prompt did not back up. The quotes are more use than the
-percentage.
-
 
 ## The interface
 
@@ -187,23 +176,20 @@ src/llmgov/
 
 Every decision is checked against a hand-written answer key.
 
-Three numbers lead. **Coverage** is how much went out without a human.
-**Selective risk** is how much of that was wrong - misses divided by what was
-actually released, not by every case, because the ones correctly handed to a
-person were never at risk. **Groundedness** is how much of the router's stated
-reasoning its own prompt supports, judged by a second model.
+The router can get a case wrong in two ways, and they don't cost the same.
 
-Those first two only make sense as a pair. Send nothing and the risk is zero.
-Send everything and the coverage is perfect. Either one on its own can be gamed.
+Unsafe auto-send - a reply that needed a person went out on its own. 
+Unnecessary review - a reply that was fine got held back. 
+From those come coverage, how much went out without a human, and selective risk, how much of what went out shouldn't have. They only make sense as a pair. Send nothing and the risk is zero; send everything and the coverage is perfect.
 
+AURC (area under the risk-coverage curve) measures how well the router knows when it might be wrong. Coverage and selective risk describe the one point where the router happened to draw its line between send and review. AURC looks at every point where it could have drawn it.
 
-Precision, recall, F1 and accuracy are still there, further down. F1 counts a
-risky reply that went out as costing the same as two wasted minutes, and most of
-this project is an argument that it doesn't.
+It's measured like this. For each case the router records how likely it thinks AUTO_SEND is, taken from the model's own output probabilities rather than a number it writes down. The cases are sorted by that, most confident first. Then, going down the list one case at a time, selective risk is worked out as if everything above that point had been sent. AURC is the average of all those values.
 
-Order extraction is scored on its own. Each case records which order it is really
-about, so whatever the model pulled out of the message can be checked against it.
-That field never feeds into the case itself.
+A low AURC means the cases the router was surest about were also the ones it got right, and its mistakes sat at the uncertain end. That's what makes a router usable in practice: you can pick a cut-off, send everything above it, and know roughly how much risk you're taking on.
+
+Precision, recall, F1 and accuracy are reported alongside. 
+
 
 ## Future Work
 

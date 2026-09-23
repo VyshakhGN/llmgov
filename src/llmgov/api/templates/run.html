@@ -11,8 +11,8 @@
   <div class="stat"><b>{{ "%.1f%%"|format(metrics.selective_risk * 100) }}</b>
     <span>selective risk - of those, wrong ({{ metrics.fn }})</span></div>
   <div class="stat">
-    <b>{% if metrics.groundedness is not none %}{{ "%.0f%%"|format(metrics.groundedness * 100) }}{% else %}-{% endif %}</b>
-    <span>groundedness - of its reasons, fully supported by what it was given</span></div>
+    <b>{% if metrics.aurc is not none %}{{ "%.1f%%"|format(metrics.aurc * 100) }}{% else %}-{% endif %}</b>
+    <span>AURC - selective risk averaged over every cut-off</span></div>
 </div>
 
 <div class="panel stats">
