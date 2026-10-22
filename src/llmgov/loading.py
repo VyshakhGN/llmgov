@@ -36,6 +36,13 @@ def load_orders(
     return orders
 
 
+def load_gold_guidelines(path: str | Path) -> dict[str, list[str]]:
+    return {
+        raw["case_id"]: (raw.get("gold") or {}).get("guidelines", [])
+        for raw in _read_yaml(path)["cases"]
+    }
+
+
 def load_drafts(path: str | Path) -> dict[str, str]:
     """Replies pinned from an earlier run, so the router can be compared in isolation."""
     return _read_yaml(path)["drafts"]

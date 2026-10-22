@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import time
 from typing import Any
 import ollama
 
@@ -71,13 +72,19 @@ class LlmRouter:
         self.last_masked: list[str] = []
         self.last_masked_text: str = ""
         self.last_prompt: str = ""
+        self.last_retrieval_ms: float | None = None
+        self.last_route_ms: float | None = None
 
     def route(self, case: Case, risk_signals: RiskSignals) -> RoutingDecision:
         case = self._mask(case)
+        self.last_retrieval_ms = None
+        self.last_route_ms = None
         retrieved = []
         guidelines = self.guidelines
         if self.index is not None:
+            started = time.perf_counter()
             retrieved = self.index.search_many(case_probes(case), k=self.top_k)
+            self.last_retrieval_ms = (time.perf_counter() - started) * 1000
             shown = {r.guideline_id for r in retrieved}
             guidelines = [g for g in self.index.guidelines if g.guideline_id in shown]
 
@@ -85,6 +92,7 @@ class LlmRouter:
         self.last_prompt = prompt
 
         extra = {} if self.think is None else {"think": self.think}
+        started = time.perf_counter()
         response = self.client.chat(
             model=self.model_name,
             messages=[
@@ -102,6 +110,7 @@ class LlmRouter:
             top_logprobs=TOP_LOGPROBS,
             **extra,
         )
+        self.last_route_ms = (time.perf_counter() - started) * 1000
 
         self.last_usage = {
             "prompt_tokens": response.get("prompt_eval_count") or 0,

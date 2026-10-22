@@ -4,27 +4,31 @@
 {% block body %}
 <h2 class="page">Runs</h2>
 <p class="sub">{{ runs|length }} recorded runs. Only cases carrying a gold label are scored.
-  Coverage is how much went out without a human, selective risk how much of that was wrong, and AURC the selective risk averaged over every cut-off when cases are ranked by the router's probability of AUTO_SEND.</p>
+  AURC is how well the router's confidence ranks its own mistakes, lower is better.</p>
 <div class="panel tight scroll"><table>
 <thead><tr><th>run</th><th>mode</th><th class="num">cases</th>
-  <th class="num">coverage</th><th class="num">selective risk</th>
   <th class="num">AURC</th>
-  <th class="num">missed</th><th class="num">over-flagged</th></tr></thead>
+  <th class="num">missed</th><th class="num">over-flagged</th>
+  <th class="num">time / case</th><th class="num">tokens / case</th></tr></thead>
 <tbody>
 {% for r in runs %}
 <tr>
   <td class="mono"><a href="/runs/{{ r.id }}">{{ r.id }}</a></td>
   <td><span class="pill {{ 'p-red' if r.mode == 'rag' else 'p-blue' }}">{{ r.mode }}</span></td>
   <td class="num">{{ r.m.n }}</td>
-  <td class="num">{{ "%.0f%%"|format(r.m.coverage * 100) }}</td>
-  <td class="num">{{ "%.1f%%"|format(r.m.selective_risk * 100) }}</td>
   <td class="num">{% if r.m.aurc is not none %}{{ "%.1f%%"|format(r.m.aurc * 100) }}{% else %}<span class="dim">-</span>{% endif %}</td>
   <td class="num">{{ r.m.fn }}</td>
   <td class="num">{{ r.m.fp }}</td>
+  {% set sc = r.m.stage_costs or {} %}
+  {% set c = sc.get('total') or sc.get('route') %}
+  <td class="num">{% if c and c.mean_ms is not none %}{{ "%.1f"|format(c.mean_ms / 1000) }}s{% if not r.m.costs_per_stage %}<span class="dim">*</span>{% endif %}{% else %}<span class="dim">-</span>{% endif %}</td>
+  <td class="num">{% if c and c.mean_prompt_tokens is not none %}{{ c.mean_prompt_tokens + (c.mean_completion_tokens or 0) }}{% if not r.m.costs_per_stage %}<span class="dim">*</span>{% endif %}{% else %}<span class="dim">-</span>{% endif %}</td>
 </tr>
 {% endfor %}
 </tbody></table></div>
 <p class="sub" style="margin-top:.6rem">Precision, recall, F1 and accuracy are on each run's own
   page. They are not shown here because they weight a missed risky reply the same as an
   unnecessary review, which is the assumption this project argues against.</p>
+<p class="sub">Time and tokens are per case. Runs marked * predate per-stage timing and
+  count the router call only, so they are not comparable with later runs.</p>
 {% endblock %}

@@ -102,6 +102,7 @@ class GoldLabel(BaseModel):
 
     action: Action
     risk_category: RiskCategory
+    guidelines: list[str] = Field(default_factory=list)
     reasoning: str = ""
     annotator_id: str = "primary"
     secondary_action: Action | None = None
@@ -168,6 +169,13 @@ class PipelineStages(BaseModel):
     extract_prompt_version: str | None = None
 
 
+class StageCost(BaseModel):
+
+    ms: float | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+
+
 class TraceRecord(BaseModel):
 
     trace_id: str
@@ -193,4 +201,5 @@ class TraceRecord(BaseModel):
     latency_ms: float | None = None
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
+    stage_costs: dict[str, StageCost] = Field(default_factory=dict)
     gold: GoldLabel | None = None

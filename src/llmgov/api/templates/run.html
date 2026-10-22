@@ -6,13 +6,9 @@
 <p class="sub">{{ metrics.n }} cases scored</p>
 
 <div class="panel stats">
-  <div class="stat"><b>{{ "%.0f%%"|format(metrics.coverage * 100) }}</b>
-    <span>coverage - sent without a human ({{ metrics.tn + metrics.fn }} of {{ metrics.n }})</span></div>
-  <div class="stat"><b>{{ "%.1f%%"|format(metrics.selective_risk * 100) }}</b>
-    <span>selective risk - of those, wrong ({{ metrics.fn }})</span></div>
   <div class="stat">
     <b>{% if metrics.aurc is not none %}{{ "%.1f%%"|format(metrics.aurc * 100) }}{% else %}-{% endif %}</b>
-    <span>AURC - selective risk averaged over every cut-off</span></div>
+    <span>AURC - how well its confidence ranks its own mistakes, lower is better</span></div>
 </div>
 
 <div class="panel stats">
@@ -33,6 +29,46 @@
   {% endfor %}
   </div>
 </div>
+{% endif %}
+
+{% if metrics.retrieval %}
+{% set groups = {"all": "all cases", "needs_review": "needing a human", "auto_send": "fine to send"} %}
+<h3>Guideline search</h3>
+<p class="sub">Each case is labelled with the guideline that decides it. Found: how often that
+  guideline was among the {{ metrics.retrieval_k }} the search returned. MRR: how near the top it
+  came - 1 if always first, 0.5 if always second, 0 if never found.</p>
+<div class="panel tight scroll"><table>
+<thead><tr><th>cases</th><th class="num">found</th><th class="num">MRR</th></tr></thead>
+<tbody>
+{% for group, row in metrics.retrieval.items() %}
+<tr>
+  <td>{% if group == 'all' %}<b>{{ groups[group] }}</b>{% else %}{{ groups[group] }}{% endif %}</td>
+  <td class="num">{{ row.hits }}/{{ row.n }}</td>
+  <td class="num">{{ "%.2f"|format(row.mrr) }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% if metrics.stage_costs %}
+<h3>Time and tokens per case</h3>
+<p class="sub">{% if metrics.costs_per_stage %}Measured per stage; the last row is the whole
+  pipeline for one case.{% else %}This run predates per-stage timing, so only the router call
+  was measured, and it includes the guideline search.{% endif %}</p>
+<div class="panel tight scroll"><table>
+<thead><tr><th>stage</th><th class="num">mean</th><th class="num">p95</th>
+  <th class="num">tokens in</th><th class="num">tokens out</th></tr></thead>
+<tbody>
+{% for stage, row in metrics.stage_costs.items() %}
+<tr>
+  <td>{% if stage == 'total' %}<b>whole pipeline</b>{% else %}{{ stage }}{% endif %}</td>
+  <td class="num">{% if row.mean_ms is not none %}{{ "%.1f"|format(row.mean_ms / 1000) }}s{% else %}<span class="dim">-</span>{% endif %}</td>
+  <td class="num">{% if row.p95_ms is not none %}{{ "%.1f"|format(row.p95_ms / 1000) }}s{% else %}<span class="dim">-</span>{% endif %}</td>
+  <td class="num">{% if row.mean_prompt_tokens is not none %}{{ row.mean_prompt_tokens }}{% else %}<span class="dim">-</span>{% endif %}</td>
+  <td class="num">{% if row.mean_completion_tokens is not none %}{{ row.mean_completion_tokens }}{% else %}<span class="dim">-</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
 {% endif %}
 
 <div class="panel">
@@ -58,14 +94,17 @@
 
 <h3>Cases</h3>
 <div class="panel tight scroll"><table>
-<thead><tr><th>case</th><th>policy rule</th><th>gold</th><th>router</th>
-  <th class="num">seconds</th><th></th></tr></thead>
+<thead><tr><th>case</th><th>policy rule</th><th>gold</th><th>deciding guideline</th>
+  <th>router</th><th class="num">seconds</th><th></th></tr></thead>
 <tbody>
 {% for r in rows %}
 <tr>
   <td class="mono"><a href="/runs/{{ run_id }}/cases/{{ r.case_id }}">{{ r.case_id }}</a></td>
   <td class="mono dim" style="font-size:.78rem">{{ r.rule }}</td>
   <td class="dim mono" style="font-size:.78rem">{{ r.gold or "-" }}</td>
+  <td class="mono" style="font-size:.78rem">{% if r.wanted %}<span class="dim">{{ r.wanted|join(", ") }}</span>
+      {% if r.searched %}{% if r.wanted_rank %} #{{ r.wanted_rank }}{% else %} <span class="pill p-red">not found</span>{% endif %}{% endif %}
+      {% else %}<span class="dim">-</span>{% endif %}</td>
   <td>{% if r.action == "AUTO_SEND" %}<span class="pill p-green">AUTO_SEND</span>
       {% else %}<span class="pill p-amber">{{ r.category }}</span>{% endif %}</td>
   <td class="num dim">{{ r.latency }}</td>

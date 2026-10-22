@@ -11,7 +11,7 @@ from ..policy import PolicyEngine
 from ..risk import detect_risk_signals
 from ..routing.base import Router, fail_safe
 from ..environment import describe
-from ..schemas import Case, PipelineStages, SystemFacts, TraceRecord
+from ..schemas import Case, PipelineStages, StageCost, SystemFacts, TraceRecord
 
 
 def new_run_id(mode: str, runs_dir: str | Path) -> str:
@@ -81,6 +81,7 @@ def run_cases(
             )
 
         generated_draft = None
+        drafted = False
         if frozen_drafts is not None and case.case_id in frozen_drafts:
             generated_draft = frozen_drafts[case.case_id]
             case = case.model_copy(update={"draft_response": generated_draft})
@@ -90,6 +91,7 @@ def run_cases(
             if progress:
                 emit("drafting... ")
             generated_draft = drafter.write(case)
+            drafted = True
             case = case.model_copy(update={"draft_response": generated_draft})
 
         signals = detect_risk_signals(case)
@@ -138,6 +140,21 @@ def run_cases(
             extract_prompt_version=extractor.prompt_version if extractor else None,
         )
 
+        stage_costs: dict[str, StageCost] = {}
+        if extractor is not None:
+            stage_costs["extract"] = extractor.last_cost
+        if drafted:
+            stage_costs["draft"] = drafter.last_cost
+        retrieval_ms = getattr(router, "last_retrieval_ms", None)
+        if retrieval_ms is not None:
+            stage_costs["retrieve"] = StageCost(ms=retrieval_ms)
+        route_ms = getattr(router, "last_route_ms", None)
+        stage_costs["route"] = StageCost(
+            ms=route_ms if route_ms is not None else latency_ms,
+            prompt_tokens=usage.get("prompt_tokens"),
+            completion_tokens=usage.get("completion_tokens"),
+        )
+
         traces.append(
             TraceRecord(
                 trace_id=str(uuid.uuid4()),
@@ -158,6 +175,7 @@ def run_cases(
                 latency_ms=latency_ms,
                 prompt_tokens=usage.get("prompt_tokens"),
                 completion_tokens=usage.get("completion_tokens"),
+                stage_costs=stage_costs,
                 gold=case.gold,
             )
         )

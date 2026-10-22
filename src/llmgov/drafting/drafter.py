@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import time
+
 import ollama
 
 from ..policy import PolicyEngine
 from ..risk.masking import mask_pii
-from ..schemas import Case
+from ..schemas import Case, StageCost
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_draft_prompt
 
 DEFAULT_HOST = "http://localhost:11434"
@@ -24,6 +26,7 @@ class Drafter:
         self.seed = seed
         self.prompt_version = PROMPT_VERSION
         self.client = ollama.Client(host=host)
+        self.last_cost = StageCost()
 
     def write(self, case: Case) -> str:
         """Return a reply for this case. The case's own draft is ignored."""
@@ -34,6 +37,8 @@ class Drafter:
         amount = self.policy.refund_amount(case.system_facts, outcome.decision)
         window = self.policy.window_for(case.system_facts)
 
+        self.last_cost = StageCost()
+        started = time.perf_counter()
         response = self.client.chat(
             model=self.model_name,
             messages=[
@@ -57,5 +62,10 @@ class Drafter:
                 "num_ctx": 8192,
                 "num_predict": 400,
             },
+        )
+        self.last_cost = StageCost(
+            ms=(time.perf_counter() - started) * 1000,
+            prompt_tokens=response.get("prompt_eval_count"),
+            completion_tokens=response.get("eval_count"),
         )
         return (response.message.content or "").strip()

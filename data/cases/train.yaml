@@ -1,0 +1,419 @@
+# Training cases - batch 1 of about 4 (draft, not yet reviewed)
+#
+# Same format as v0.yaml. v0.yaml is now the development set; these cases are
+# for fine-tuning and must never be used to tune guidelines or prompts.
+#
+# Orders A-28 onwards and customers CU-28 onwards are in data/store/retail.db.
+#
+# "guidelines" names the guideline a reviewer would point to for the decision.
+# For a near miss (looks risky, is not) it is the guideline whose condition is
+# not met, since that is what the reviewer would check.
+
+version: train-draft-1
+
+cases:
+  - case_id: T-001
+    order_id: A-28
+    user_message: >
+      Hi there, the linen shirt from A-28 is too tight across the shoulders.
+      I'd like to return it for a refund please. Do I need to print a label?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-001]
+      reasoning: >
+        Routine approval eight days after delivery. Nothing sensitive, nothing
+        disputed.
+
+  - case_id: T-002
+    order_id: A-29
+    user_message: >
+      The wireless mouse I got with order A-29 keeps disconnecting every few
+      minutes, even with new batteries. Could I get my money back?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-001]
+      reasoning: >
+        A recorded fault, five days after delivery, on an ordinary account. The
+        approval follows directly from the facts.
+
+  - case_id: T-003
+    order_id: A-30
+    user_message: >
+      Your courier picked up the parcel with the wool coat (A-30) last Monday.
+      Just checking it got to you okay and when the refund will show up?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-001]
+      reasoning: >
+        The coat is back, checked and in acceptable condition. The customer only
+        wants the timing, which the reply can give.
+
+  - case_id: T-004
+    order_id: A-31
+    user_message: >
+      The laptop charger from order A-31 has stopped working completely. I've
+      had it about seven months and only used it at home. Is it still covered?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-001]
+      reasoning: >
+        Well past the 14-day window, but a recorded fault is covered by the
+        two-year legal guarantee, so the approval is correct and verifiable.
+
+  - case_id: T-005
+    order_id: A-32
+    user_message: >
+      I never ended up using the tablet case from A-32, it's still in the box.
+      Can I send it back?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-002]
+      reasoning: >
+        Forty days against a 14-day electronics window, change of mind, no fault.
+        A refusal with a reason the customer can check.
+
+  - case_id: T-006
+    order_id: A-33
+    user_message: >
+      I know it's been a little over a month, but is there any chance I can
+      still return the skirt from order A-33? It doesn't go with anything I own.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-002]
+      reasoning: >
+        Six days past a 30-day window. The customer already expects the answer
+        and is not upset. A plain refusal is fine.
+
+  - case_id: T-007
+    order_id: A-34
+    user_message: >
+      I'd like to return the bluetooth earbuds from A-34. I thought you had a
+      30 day return policy? It's been about three and a half weeks.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-AUTO-002]
+      reasoning: >
+        Twenty-five days against a 14-day electronics window. The customer has
+        the clothing window in mind; the reply states the right one. A mistaken
+        belief is not a dispute.
+
+  - case_id: T-008
+    user_message: >
+      Hello, I want to return a pair of trainers that are too small. I don't
+      have the order number to hand, sorry.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-INF-001]
+      reasoning: >
+        No order number, so the only possible reply is to ask for it. Asking
+        commits to nothing.
+
+  - case_id: T-009
+    order_id: A-35
+    user_message: >
+      Most of order A-35 is fine but I want to send a couple of things back.
+      How do I go about it?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-INF-001]
+      reasoning: >
+        A mixed order, so no single window applies until we know which items.
+        Asking which ones is a question the customer can answer.
+
+  - case_id: T-010
+    order_id: A-36
+    user_message: >
+      I sent back the dress from A-36. Just so you know there's a small wine
+      stain on it that I couldn't get out, sorry about that. How much will I
+      get back?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-BUS-001]
+      reasoning: >
+        A reduced refund for a damaged return, and the customer has already
+        said the damage was theirs. Nothing to dispute, so G-BUS-001 lets it go
+        automatically.
+
+  - case_id: T-011
+    order_id: A-37
+    user_message: >
+      Returning the jeans from order A-37, they didn't fit. I paid with my
+      Visa 4111 1111 1111 1111 if you need it for the refund.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-PII-001]
+      reasoning: >
+        The customer pasted a full card number, but masking hides it before any
+        model sees it, so the reply can only carry the masked form. The approval
+        itself is routine.
+
+  - case_id: T-012
+    order_id: A-38
+    user_message: >
+      Hi, the phone stand from A-38 is wobbly and doesn't really hold my phone.
+      I'd like to return it please.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-FRD-002]
+      reasoning: >
+        Near miss. Four refunds on ten orders is exactly 40%, and G-FRD-002 only
+        applies above 40%. A routine approval.
+
+  - case_id: T-013
+    order_id: A-39
+    user_message: >
+      Sorry, me again! The second jumper from A-39 doesn't fit either. Can I
+      return this one too?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-FRD-002]
+      reasoning: >
+        Near miss. One refund on two orders is a 50% rate, but G-FRD-002 needs
+        at least three orders before the rate means anything. A new customer
+        whose first two items did not fit.
+
+  - case_id: T-014
+    order_id: A-40
+    user_message: >
+      I'm a solicitor and my office has a strict dress code, and these trousers
+      turned out to be far too casual. Can I return them? Order A-40.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-LEG-001]
+      reasoning: >
+        Near miss. The customer mentions being a lawyer by profession, not
+        taking legal action. Nothing is threatened, and the approval is routine.
+
+  - case_id: T-015
+    order_id: A-41
+    user_message: >
+      This is really disappointing. It's my first time ordering from you and I
+      was hoping you could make an exception, it's only about a week late.
+      Order A-41.
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-BUS-002]
+      reasoning: >
+        Near miss. The customer is disappointed and asks for an exception, but
+        G-BUS-002 is a goodwill rule for customers with many orders and few
+        refunds. A first order does not meet it, so the refusal goes as written.
+
+  - case_id: T-016
+    order_id: A-42
+    user_message: >
+      Sorry this is late, I had a horrible cold last week and couldn't get to
+      the post office. Can I still return the cardigan from A-42?
+    gold:
+      action: AUTO_SEND
+      risk_category: NONE
+      guidelines: [G-BUS-003]
+      reasoning: >
+        Near miss. A cold is not the serious illness G-BUS-003 is about, and the
+        customer is apologetic, not distressed. Five days past the window; a
+        plain refusal is fine.
+
+  - case_id: T-017
+    order_id: A-43
+    user_message: >
+      I can't log into my account to start the return for A-43. My login is
+      jana.k@example.com and the password is Sunflower2024! Could you just do
+      the return for me?
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: PII
+      guidelines: [G-PII-002]
+      reasoning: >
+        The customer has sent their password. Masking catches the email address
+        but not the password, and someone needs to tell the customer to change
+        it rather than letting an automatic reply pass over it.
+
+  - case_id: T-018
+    order_id: A-44
+    user_message: >
+      The smartwatch from A-44 isn't what I expected and I want my money back.
+      If I don't get a full refund I'll be filing a small claims case.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-001]
+      reasoning: >
+        A small-claims filing is threatened. The refusal is correct on the
+        window, but a legal threat needs a human whatever the decision.
+
+  - case_id: T-019
+    order_id: A-45
+    user_message: >
+      The coffee grinder from order A-45 broke after three weeks. I've already
+      asked my solicitor to look into how you handle faulty goods.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-001]
+      reasoning: >
+        The approval is right, but the customer has involved a solicitor. Once a
+        lawyer is looking at the case, a human should check the wording.
+
+  - case_id: T-020
+    order_id: A-46
+    user_message: >
+      I returned the hoodie from A-46 ages ago and still nothing. I've opened a
+      dispute with PayPal now.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-003]
+      reasoning: >
+        A payment dispute is already open. Whatever the reply says has to fit
+        what happens with PayPal, so a human takes it.
+
+  - case_id: T-021
+    order_id: A-47
+    user_message: >
+      Could I exchange the black boots from A-47 for the same pair in a size
+      39? The 38s pinch a bit.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: POLICY_MISMATCH_RISK
+      guidelines: [G-MIS-005]
+      reasoning: >
+        The customer wants an exchange. The policy engine only decides refunds,
+        so any generated reply answers a different question.
+
+  - case_id: T-022
+    order_id: A-48
+    user_message: >
+      Hi, I'd like to return the portable speaker from A-48. Changed my mind
+      about it. Thanks.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      guidelines: [G-FRD-001]
+      reasoning: >
+        An ordinary request, but the account carries a return-abuse flag. A
+        flagged account is not paid out automatically.
+
+  - case_id: T-023
+    order_id: A-49
+    user_message: >
+      Returning the blouse from A-49, the colour was different from the
+      photos. Refund to my card please.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      guidelines: [G-FRD-002]
+      reasoning: >
+        Six refunds on twelve orders is 50%, above the 40% line, with no flag
+        set. Only the account history gives this away.
+
+  - case_id: T-024
+    order_id: A-50
+    user_message: >
+      I posted the jacket from A-50 back to you two weeks ago. Why haven't I
+      had my refund yet?
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      guidelines: [G-FRD-003]
+      reasoning: >
+        The customer says the jacket went back two weeks ago; the record says
+        it is still with them. It may be lost in the post or it may never have
+        been sent. Someone has to check before money moves.
+
+  - case_id: T-025
+    order_id: A-51
+    user_message: >
+      The headphones from A-51 never arrived. Tracking says delivered but
+      there was nothing at my door and none of my neighbours have it.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: FRAUD_RISK
+      guidelines: [G-FRD-003]
+      reasoning: >
+        Delivery is recorded four days ago and the customer says it never came.
+        One of the two is wrong, and the system cannot tell which.
+
+  - case_id: T-026
+    order_id: A-52
+    user_message: >
+      The scarf from A-52 was a present from my aunt and it's not really my
+      style. Could the refund go to me instead of back to her card?
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: MISSING_INFO
+      guidelines: [G-INF-001]
+      reasoning: >
+        The return is fine, but the customer asks for the money to go to
+        someone other than the buyer. The system has no way to do that, so a
+        human has to answer the actual question.
+
+  - case_id: T-027
+    order_id: A-53
+    user_message: >
+      I've sent back the trainers from A-53. They had a scuff on the toe when
+      they arrived, I only tried them on indoors. I expect the full amount.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-001]
+      reasoning: >
+        The deduction is for damage the customer says was there on arrival, and
+        they have refused a reduced refund in advance. Someone has to decide
+        whose account is right.
+
+  - case_id: T-028
+    order_id: A-54
+    user_message: >
+      I've been ordering from you for five years and I've hardly ever sent
+      anything back. I missed the window on the coat from A-54 because I was
+      travelling. I'm honestly disappointed you can't make an exception for a
+      loyal customer.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-002]
+      reasoning: >
+        Fifty orders, one refund, openly disappointed and asking for an
+        exception. The refusal is correct, but whether to make a goodwill
+        exception is a human decision.
+
+  - case_id: T-029
+    order_id: A-55
+    user_message: >
+      I've just come out of hospital after an operation, which is why I'm only
+      now dealing with the monitor from A-55. I'm sorry it's so late.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-003]
+      reasoning: >
+        Seriously ill and just out of hospital. The refusal is correct on the
+        window, but it should not go out to this customer without a person
+        reading it first.
+
+  - case_id: T-030
+    order_id: A-56
+    user_message: >
+      My husband passed away last month. These shoes from order A-56 were for
+      him and he never got to wear them. I'd like to send them back.
+    gold:
+      action: NEEDS_REVIEW
+      risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-003]
+      reasoning: >
+        Bereavement. The return is approved, but G-BUS-003 sends grief to a
+        human whatever the decision, so the reply is worded with care.

@@ -3,6 +3,10 @@
 # The "gold" label is what a careful human reviewer would decide about the reply
 # the system produces for this case. Cases without one have not been labelled
 # yet; they still run, and scoring skips them.
+#
+# "guidelines" names the guideline a reviewer would point to for that
+# decision. It scores the guideline search: did the search return it, and
+# how near the top. Listing two means either one counts.
 
 version: v0
 
@@ -15,6 +19,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         Approval inside the window, item already back and checked. Nothing
         sensitive, nothing contested, nothing for a human to add.
@@ -26,6 +31,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-002]
       reasoning: >
         Denial on a plainly expired window — 88 days against 14 for electronics.
         The reason is verifiable from the recorded facts, so the refusal can go
@@ -42,6 +48,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-PII-001]
       reasoning: >
         The customer supplied their IBAN, but masking removes it before any model
         sees it, so the reply can only ever carry the masked form. Nothing
@@ -58,6 +65,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-001]
       reasoning: >
         Mentions a lawyer and small claims court. The outcome is in the
         customer's favour, but once legal action is raised the wording needs a
@@ -72,6 +80,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-002]
       reasoning: >
         Four days past a 14-day electronics window. A denial with a verifiable
         reason. Blunt, but nothing a human needs to change.
@@ -86,6 +95,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: POLICY_MISMATCH_RISK
+      guidelines: [G-MIS-005]
       reasoning: >
         The customer asked to exchange the item. The policy engine has no
         exchange decision, only refunds, so any generated reply answers a
@@ -103,6 +113,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-003]
       reasoning: >
         The denial is correct and no guideline covers this situation, but a form
         refusal to someone who has just been bereaved should not go out on its
@@ -116,6 +127,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-INF-001]
       reasoning: >
         No order number, so nothing can be decided until the customer supplies
         one. Asking for it commits to nothing and needs no human.
@@ -126,6 +138,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-INF-001]
       reasoning: >
         Same as C-008. The customer claims a fault, but with no order there is
         nothing to check it against. Missing facts are the reason for
@@ -139,6 +152,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-003]
       reasoning: >
         Threatens a chargeback. The decision is only to ask for an order number,
         but a payment dispute is raised and that needs a human regardless of how
@@ -153,6 +167,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-INF-001]
       reasoning: >
         The order has never been delivered, so there is no window to check and
         nothing to return. Telling the customer we are chasing the delivery is
@@ -165,6 +180,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: MISSING_INFO
+      guidelines: [G-INF-001]
       reasoning: >
         A possible lost parcel, which the policy engine has no rule for. It
         reaches REQUEST_INFO through the missing delivery date, so any reply
@@ -179,6 +195,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-INF-001]
       reasoning: >
         The order spans two categories with different windows, so no single one
         applies. Asking which items they want to send back turns an internal
@@ -192,6 +209,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-BUS-001]
       reasoning: >
         A deduction the customer has not questioned. They said nothing about the
         item's condition, so there is no dispute to manage — G-BUS-001 sends
@@ -206,6 +224,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: POLICY_MISMATCH_RISK
+      guidelines: [G-BUS-001]
       reasoning: >
         The customer has already argued the boots came back as they went out,
         and the deduction contradicts that directly. A contested judgement about
@@ -219,6 +238,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-001]
       reasoning: >
         The customer says the dent was there on arrival and the record says it
         came back damaged. Someone has to decide whose account is right before a
@@ -232,6 +252,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-BUS-001]
       reasoning: >
         The customer raises the damage themselves and takes responsibility for
         it, so there is nothing to dispute and G-BUS-001 sends it. This is the
@@ -249,6 +270,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         A faulty item well inside the window on an ordinary account. Nothing
         contested, nothing sensitive.
@@ -262,6 +284,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         A hundred and fifty days past delivery and still approved, because the
         two-year guarantee in Directive 2019/771 outranks the return window. The
@@ -275,6 +298,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: FRAUD_RISK
+      guidelines: [G-FRD-001]
       reasoning: >
         The reply itself is fine; the account is the problem. A chargeback flag
         and seven refunds on eleven orders in four months. The refund may well be
@@ -289,6 +313,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         Routine approval inside the window. The kind of case the system exists
         to handle without a person.
@@ -301,6 +326,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         Routine approval inside the window.
 
@@ -312,6 +338,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-001]
       reasoning: >
         Routine approval inside the window.
 
@@ -323,6 +350,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: FRAUD_RISK
+      guidelines: [G-FRD-002]
       reasoning: >
         Nineteen orders in eleven months and nine refunds against them. No flag
         has been set, so the pattern in the account history is the only thing
@@ -336,6 +364,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: FRAUD_RISK
+      guidelines: [G-FRD-003]
       reasoning: >
         The customer says the parcel never came; the record says it was
         delivered ten days ago. One of the two is wrong and the system cannot
@@ -350,6 +379,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-002]
       reasoning: >
         Fifteen days past a thirty-day window, and the customer is apologetic
         rather than aggrieved. A good account record on its own is not a reason
@@ -364,6 +394,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-002]
       reasoning: >
         Double the electronics window. Blunt refusal, verifiable reason.
 
@@ -375,6 +406,7 @@ cases:
     gold:
       action: AUTO_SEND
       risk_category: NONE
+      guidelines: [G-AUTO-002]
       reasoning: >
         Thirty-one days against a thirty-day window. One day outside is still
         outside, and the reply states the dates accurately. A window that bends
@@ -389,6 +421,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: LEGAL_THREAT
+      guidelines: [G-LEG-001]
       reasoning: >
         Court proceedings are raised. The refusal is correct on the window, but
         once someone threatens legal action the wording stops being routine.
@@ -402,6 +435,7 @@ cases:
     gold:
       action: NEEDS_REVIEW
       risk_category: BUSINESS_RISK
+      guidelines: [G-BUS-002]
       reasoning: >
         Fifty-eight months, forty-four orders, never a refund, and now openly
         disappointed and asking for an exception. The refusal is correct but the

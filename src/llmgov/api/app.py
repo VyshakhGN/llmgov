@@ -33,7 +33,13 @@ from ..evaluation import (
 )
 from ..evaluation.metrics import COST_RATIOS
 from ..extraction import OrderExtractor
-from ..loading import load_cases, load_customers, load_guidelines, load_orders
+from ..loading import (
+    load_cases,
+    load_customers,
+    load_gold_guidelines,
+    load_guidelines,
+    load_orders,
+)
 from ..policy import load_policy
 from ..schemas import HumanReview
 from ..routing.retrieval import DEFAULT_K
@@ -102,10 +108,10 @@ def _review_summary(run: Path, flagged: int) -> dict[str, int]:
     }
 
 
-def _metrics(run: Path) -> dict[str, Any]:
+def _metrics(run: Path, relevant: dict[str, list[str]] | None = None) -> dict[str, Any]:
     """Recompute from traces so runs written before a metric existed still carry it."""
     try:
-        m = score(read_traces(run / "traces.jsonl"))
+        m = score(read_traces(run / "traces.jsonl"), relevant)
         return m.to_dict()
     except (FileNotFoundError, ValueError):
         return _backfill(json.loads((run / "metrics.json").read_text(encoding="utf-8")))
@@ -120,6 +126,10 @@ def _backfill(m: dict[str, Any]) -> dict[str, Any]:
         "coverage": sent / m["n"] if m.get("n") else 0.0,
         "selective_risk": fn / sent if sent else 0.0,
         "aurc": None,
+        "stage_costs": {},
+        "costs_per_stage": False,
+        "retrieval": {},
+        "retrieval_k": None,
         "always_send_correct": tn + fp,
         "always_review_correct": tp + fn,
         "cost_by_ratio": {str(w): w * fn + fp for w in COST_RATIOS},
@@ -135,19 +145,24 @@ def _traces(run: Path) -> list[dict[str, Any]]:
 
 @app.get("/", response_class=HTMLResponse)
 def runs_index(request: Request):
+    relevant = load_gold_guidelines(DEFAULT_CASES)
     rows = []
     for d in _run_dirs():
-        rows.append({"id": d.name, "mode": d.name.split("-", 1)[1], "m": _metrics(d)})
+        rows.append({"id": d.name, "mode": d.name.split("-", 1)[1], "m": _metrics(d, relevant)})
     return templates.TemplateResponse(request, "runs.html", {"runs": rows})
 
 
 @app.get("/runs/{run_id}", response_class=HTMLResponse)
 def run_detail(request: Request, run_id: str):
     run = RUNS_DIR / run_id
-    metrics = _metrics(run)
+    relevant = load_gold_guidelines(DEFAULT_CASES)
+    metrics = _metrics(run, relevant)
     rows = []
     for t in _traces(run):
         gold = t.get("gold") or {}
+        wanted = relevant.get(t["case_id"], [])
+        found = t["decision"].get("retrieved_guidelines") or []
+        ranks = [g["rank"] for g in found if g["guideline_id"] in wanted and g.get("rank")]
         rows.append(
             {
                 "case_id": t["case_id"],
@@ -158,6 +173,9 @@ def run_detail(request: Request, run_id: str):
                 "hit": gold.get("action") == t["decision"]["action"] if gold else None,
                 "rule": (t.get("stages") or {}).get("policy_rule", ""),
                 "latency": round((t.get("latency_ms") or 0) / 1000, 1),
+                "wanted": wanted,
+                "searched": bool(found),
+                "wanted_rank": min(ranks) if ranks else None,
             }
         )
     flagged = sum(1 for r in rows if r["action"] == "NEEDS_REVIEW")
