@@ -14,9 +14,6 @@
 <div class="panel stats">
   <div class="stat"><b>{{ metrics.fn }}</b><span>risky replies sent out - of {{ metrics.tp + metrics.fn }}</span></div>
   <div class="stat"><b>{{ metrics.fp }}</b><span>fine replies sent to a human - of {{ metrics.tn + metrics.fp }}</span></div>
-  {% if metrics.cost_by_ratio %}
-  <div class="stat"><b>{{ metrics.cost_by_ratio['10'] }}</b><span>misclassification cost - 10 per risky reply sent out, 1 per fine reply sent to a human</span></div>
-  {% endif %}
 </div>
 
 <div class="panel stats">
