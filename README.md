@@ -26,13 +26,11 @@ It only judges whether what has already been written is safe to send.
 
 ## Where the rules come from
 
-The return policy sits in a config file rather than in code: window lengths per
-category, how faulty goods are handled, when a refund gets reduced instead of
-refused. The numbers follow published European retail practice, with the EU
+The rules are based on things like return window lengths per item category. The numbers follow published European retail practice, with the EU
 Consumer Rights Directive as the floor.
 
 Routing guidelines are a separate thing. They say when a reply should go to a
-person, and they arrive the way a real company's policy would: as a PDF. The
+person, and they sit in a PDF file. The
 system parses the eighteen clauses out of it at startup. Each one records where
 it came from - GDPR, the EU consumer dispute framework, or "company policy" where
 we made the rule up ourselves. Nine of the eighteen cite regulation and the other
