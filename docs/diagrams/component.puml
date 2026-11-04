@@ -2,7 +2,7 @@
 skinparam componentStyle uml2
 skinparam shadowing false
 skinparam linetype ortho
-skinparam nodesep 75
+skinparam nodesep 85
 skinparam ranksep 100
 skinparam defaultTextAlignment center
 skinparam rectangle<<column>> {
@@ -67,36 +67,36 @@ rectangle "RAG Refund Response Automation System" {
 
 }
 
-UI_CASE -down(0- ORCH : IRefundCaseAPI
-UI_REVIEW -down(0- ORCH : IHumanReviewAPI
-ORCH -up(0- QUEUE : IReviewQueue
+UI_CASE -down(0- ORCH : RefundCaseAPI
+UI_REVIEW -down(0- ORCH : HumanReviewAPI
+ORCH -up(0- QUEUE : ReviewQueue
 
-ORCH -left(0- CASES : ICaseSet
+ORCH -left(0- CASES : CaseSet\n
 
-ORCH -right(0- EVAL : IEvaluation
+ORCH "Scoring\n" -right(0- EVAL
 SPACER -[hidden]right- EVAL
 POL -[hidden]right- SPACER2
-EVAL -down(0- LOGS : IRoutingLogStore
-ORCH -down(0- LOGS : IRoutingLogStore
+EVAL -down(0- "TraceStorage" LOGS
+ORCH -down(0- "TraceStorage" LOGS
 
-ORCH -down(0- POL : IPolicyDecision
-ORCH -down(0- "IRoutingDecision" ROUTE
+ORCH -down(0- POL : RefundDecision
+ORCH -down(0- "RoutingDecision" ROUTE
 
-ORCH -down(0- "IDraftGeneration" DRAFT
-EXT -up0)- "IOrderExtraction" ORCH
-ORCH -down(0- ORDERDB : IOrderFactsStore
+ORCH -down(0- "ReplyDrafting" DRAFT
+EXT -up0)- "OrderExtraction" ORCH
+ORCH -down(0- ORDERDB : OrderFacts
 
 
-POL -down(0- "IRefundPolicyRules" RULES
-ROUTE -down(0- RET : IGuidelineRetrieval
-ROUTE -down(0- RISK : IPiiMasking
-DRAFT -down(0- RISK : IPiiMasking
-DRAFT -[norank](0- POL : IPolicyDecision
-ROUTE -down(0- "ILLMCompletion" LLM
-DRAFT -down(0- "ILLMCompletion" LLM
-EXT "ILLMCompletion" -down(0- LLM
+POL -down(0- "PolicyRules" RULES
+ROUTE -down(0- RET : GuidelineSearch
+ROUTE -down(0- RISK : Masking
+DRAFT -down(0- RISK : Masking
+DRAFT -[norank](0- "RefundDecision" POL
+ROUTE -down(0- "PromptResponse" LLM
+DRAFT -down(0- LLM : \nPromptResponse
+EXT "PromptResponse" -down(0- LLM
 
-RET -down(0- VEC : IGuidelineStore
-RET -down(0- EMB : IEmbedding
-VEC -down(0- PDF : IGuidelineDocument
+RET -down(0- VEC : VectorSearch
+RET -down(0- EMB : Embedding
+VEC -down(0- PDF : GuidelineClauses
 @enduml

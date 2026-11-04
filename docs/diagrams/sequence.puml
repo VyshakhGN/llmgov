@@ -5,7 +5,7 @@ skinparam ParticipantPadding 10
 skinparam ParticipantBackgroundColor #F1F1F1
 skinparam DatabaseBackgroundColor #F1F1F1
 hide footbox
-title sd Refund case
+title sd Refund case run
 
 participant "Refund case UI" as UI <<frontend>>
 participant "FastAPI\nOrchestrator" as ORCH <<REST API>>
@@ -17,48 +17,50 @@ participant "Routing decision\nengine" as ROUTE <<decision service>> #DDEBF7
 participant "Guideline\nretriever" as RET <<retrieval service>>
 participant "LLM Service" as LLM <<AI service>> #DDEBF7
 database "Routing logs" as LOGS <<log store>>
-participant "Human Review\nQueue" as QUEUE <<review queue>>
 
 autonumber "<b>0:"
 
-UI -> ORCH : submit(case)
+UI -> ORCH : run_start(mode, top_k, case_ids)
 activate ORCH
 
-ORCH -> EXT : extract(message)
-activate EXT
-EXT -> LLM : complete(prompt)
-LLM --> EXT : completion
-EXT --> ORCH : orderId
-deactivate EXT
+ORCH -> DB : load_orders(path, customers)
+DB --> ORCH : orders
 
-ORCH -> DB : getFacts(orderId)
-DB --> ORCH : facts
+loop for each selected case
 
-ORCH -> POL : decide(facts)
-POL --> ORCH : decision
+  ORCH -> EXT : extract(message)
+  activate EXT
+  EXT -> LLM : chat(prompt)
+  LLM --> EXT : response
+  EXT --> ORCH : order_id
+  deactivate EXT
 
-ORCH -> DRAFT : writeReply(case, decision)
-activate DRAFT
-DRAFT -> LLM : complete(prompt)
-LLM --> DRAFT : completion
-DRAFT --> ORCH : draft
-deactivate DRAFT
+  ORCH -> ORCH : orders.get(order_id)
 
-ORCH -> ROUTE : route(case, draft)
-activate ROUTE
-group opt <U+2007><U+2007><U+2007>[RAG mode]
-  ROUTE -> RET : search(case, draft)
-  RET --> ROUTE : guidelines (top k)
+  ORCH -> POL : decide(facts)
+  POL --> ORCH : decision
+
+  ORCH -> DRAFT : write(case)
+  activate DRAFT
+  DRAFT -> LLM : chat(prompt)
+  LLM --> DRAFT : response
+  DRAFT --> ORCH : draft
+  deactivate DRAFT
+
+  ORCH -> ROUTE : route(case, risk_signals)
+  activate ROUTE
+  group opt <U+2007><U+2007><U+2007>[RAG mode]
+    ROUTE -> RET : search_many(queries, k)
+    RET --> ROUTE : top k guidelines
+  end
+  ROUTE -> LLM : chat(prompt)
+  LLM --> ROUTE : response
+  ROUTE --> ORCH : RoutingDecision
+  deactivate ROUTE
+
 end
-ROUTE -> LLM : complete(prompt)
-LLM --> ROUTE : completion
-ROUTE --> ORCH : action, riskCategory, reason
-deactivate ROUTE
 
-ORCH -> LOGS : writeTrace(trace)
-group opt [action = NEEDS_REVIEW]
-  ORCH -> QUEUE : add(case)
-end
-ORCH --> UI : result
+ORCH -> LOGS : write_traces(traces, path)
+ORCH --> UI : DONE /runs/{run_id}
 deactivate ORCH
 @enduml
