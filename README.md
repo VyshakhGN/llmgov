@@ -26,11 +26,11 @@ It only judges whether what has already been written is safe to send.
 
 ## Where the rules come from
 
-The return policy is based on things like the return window period for each item category. The numbers follow published European retail practice, with the EU
+The rules are based on things like return window lengths per item category. The numbers follow published European retail practice, with the EU
 Consumer Rights Directive as the floor.
 
 Routing guidelines are a separate thing. They say when a reply should go to a
-person, and they arrive the way a real company's policy would: as a PDF. The
+person, and they sit in a PDF file. The
 system parses the eighteen clauses out of it at startup. Each one records where
 it came from - GDPR, the EU consumer dispute framework, or "company policy" where
 we made the rule up ourselves. Nine of the eighteen cite regulation and the other
@@ -103,7 +103,7 @@ uv run llmgov run --mode rag --top-k 10
 `--mode` picks one of the three above. `--top-k` sets how many guidelines the
 search hands over, and only applies to `rag`. 
 
-Expect about half an hour for all 30 cases. Each one is three model calls -
+Runtime was around 35 to 50 minutes in my (GTX 1650Ti, i5 10th gen) laptop for all 30 cases. Each one is three model calls -
 reading the order number, writing the reply, judging it - and the model runs on
 the CPU.
 
@@ -168,6 +168,8 @@ src/llmgov/
   api/          the web interface and its templates
   loading_pdf.py  pulls the eighteen clauses out of the policy PDF
   store.py      reads the order book and the accounts out of SQLite
+docs/
+  diagrams/     component and sequence diagrams (PlantUML sources and SVGs)
 ```
 
 ## Evaluation
@@ -186,7 +188,11 @@ It's measured like this. For each case the router records how likely it thinks A
 
 A low AURC means the cases the router was surest about were also the ones it got right, and its mistakes sat at the uncertain end. That's what makes a router usable in practice: you can pick a cut-off, send everything above it, and know roughly how much risk you're taking on.
 
-Precision, recall, F1 and accuracy are reported alongside. 
+Precision, recall, F1 and accuracy are reported alongside.
+
+The guideline search is scored on its own: for each case, did the search return the guideline
+that decides it (hit rate), and how near the top (MRR). Every run also records the time and tokens
+of each step, so the cost of each mode is visible next to its results.
 
 
 ## Future Work

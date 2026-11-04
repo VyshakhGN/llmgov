@@ -1,0 +1,64 @@
+@startuml sequence
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam ParticipantPadding 10
+skinparam ParticipantBackgroundColor #F1F1F1
+skinparam DatabaseBackgroundColor #F1F1F1
+hide footbox
+title sd Refund case
+
+participant "Refund case UI" as UI <<frontend>>
+participant "FastAPI\nOrchestrator" as ORCH <<REST API>>
+participant "Order number\nextractor" as EXT <<LLM service>> #DDEBF7
+database "Order &\ncustomer DB" as DB <<database>>
+participant "Backend policy\nengine" as POL <<service>>
+participant "Draft response\ngenerator" as DRAFT <<LLM service>> #DDEBF7
+participant "Routing decision\nengine" as ROUTE <<decision service>> #DDEBF7
+participant "Guideline\nretriever" as RET <<retrieval service>>
+participant "LLM Service" as LLM <<AI service>> #DDEBF7
+database "Routing logs" as LOGS <<log store>>
+participant "Human Review\nQueue" as QUEUE <<review queue>>
+
+autonumber "<b>0:"
+
+UI -> ORCH : submit(case)
+activate ORCH
+
+ORCH -> EXT : extract(message)
+activate EXT
+EXT -> LLM : complete(prompt)
+LLM --> EXT : completion
+EXT --> ORCH : orderId
+deactivate EXT
+
+ORCH -> DB : getFacts(orderId)
+DB --> ORCH : facts
+
+ORCH -> POL : decide(facts)
+POL --> ORCH : decision
+
+ORCH -> DRAFT : writeReply(case, decision)
+activate DRAFT
+DRAFT -> LLM : complete(prompt)
+LLM --> DRAFT : completion
+DRAFT --> ORCH : draft
+deactivate DRAFT
+
+ORCH -> ROUTE : route(case, draft)
+activate ROUTE
+group opt <U+2007><U+2007><U+2007>[RAG mode]
+  ROUTE -> RET : search(case, draft)
+  RET --> ROUTE : guidelines (top k)
+end
+ROUTE -> LLM : complete(prompt)
+LLM --> ROUTE : completion
+ROUTE --> ORCH : action, riskCategory, reason
+deactivate ROUTE
+
+ORCH -> LOGS : writeTrace(trace)
+group opt [action = NEEDS_REVIEW]
+  ORCH -> QUEUE : add(case)
+end
+ORCH --> UI : result
+deactivate ORCH
+@enduml
