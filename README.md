@@ -56,19 +56,18 @@ retrieve guidelines          the rules most relevant to this case
    ↓
 LLM router                   AUTO_SEND or NEEDS_REVIEW, with a written reason
    ↓
-enforce and record           the system acts, the model only advises
+record the decision          cases marked for review appear in the review queue
 ```
 
 The policy engine uses plain rules that behave the same way every time. Whether
 a reply is safe to send is a judgement call, and that part is the LLM's job.
 
-The [simplified component diagram](docs/diagrams/component_simplified.svg) shows
+The [component diagram](docs/diagrams/component-diagram.svg) shows
 how the baseline system fits together. The [sequence diagram](docs/diagrams/sequence.svg)
 shows what happens step by step when a case runs from the web interface.
 
-If the order number is missing or wrong, the lookup comes back empty and the
-policy engine asks the customer for it. A model mistake costs someone a round
-trip. It can't hand them somebody else's order.
+If the system finds no matching order, the policy engine asks the customer
+for the order number.
 
 There are two things the drafter deliberately can't see. One is the routing
 guidelines - a drafter that knows the rules writes replies that pass them, and
@@ -172,7 +171,7 @@ Reviews are written to `reviews.jsonl`.
 
 ```
 data/
-  cases/        test cases with a gold label, what a careful reviewer would decide
+  cases/        development cases and a draft batch of training cases
   store/        SQLite - the order book and the customer accounts behind it
   policy/       the return policy, as configuration
   guidelines/   when a reply needs a human, as a policy PDF
@@ -197,15 +196,19 @@ Every decision is checked against a hand-written answer key.
 
 The router can get a case wrong in two ways, and they don't cost the same.
 
-Unsafe auto-send - a reply that needed a person went out on its own. 
-Unnecessary review - a reply that was fine got held back. 
-From those come coverage, how much went out without a human, and selective risk, how much of what went out shouldn't have. They only make sense as a pair. Send nothing and the risk is zero; send everything and the coverage is perfect.
+- **Unsafe auto-send** means the router marked a reply for automatic send when
+  it needed a human.
+- **Unnecessary review** means the router held back a reply that was safe.
+
+Coverage is the share marked for automatic send. Selective risk is the share
+of those replies that should have gone to review. Read the two together.
 
 AURC (area under the risk-coverage curve) measures how well the router knows when it might be wrong. Coverage and selective risk describe the one point where the router happened to draw its line between send and review. AURC looks at every point where it could have drawn it.
 
 It's measured like this. For each case the router records how likely it thinks AUTO_SEND is, taken from the model's own output probabilities rather than a number it writes down. The cases are sorted by that, most confident first. Then, going down the list one case at a time, selective risk is worked out as if everything above that point had been sent. AURC is the average of all those values.
 
-A low AURC means the cases the router was surest about were also the ones it got right, and its mistakes sat at the uncertain end. That's what makes a router usable in practice: you can pick a cut-off, send everything above it, and know roughly how much risk you're taking on.
+A lower AURC means the router did a better job of putting safe replies ahead
+of risky ones in that ranking.
 
 Precision, recall, F1 and accuracy are reported alongside.
 
@@ -215,5 +218,6 @@ of each step, so the cost of each version is visible next to its results.
 
 ## Future Work
 
-A larger case set, then separate test and Validation sets for fine Tuning. Fine-tuning the model and
-comparing it against Retrieval. 
+Review and expand the training cases, then set aside separate validation and
+test cases. Fine-tune the router and compare it with the version that retrieves
+guidelines.

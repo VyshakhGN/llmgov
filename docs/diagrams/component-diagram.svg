@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="829" viewBox="0 0 800 829" role="img" aria-labelledby="title desc">
-  <title id="title">Refund response automation — simplified component diagram</title>
+  <title id="title">Refund response automation — component diagram</title>
   <desc id="desc">Five subsystems with vertical connections through UML boundary ports. The web console and experiment CLI use the pipeline runner. The evaluation workspace scores run traces and saves traces and metrics as evaluation outputs. The pipeline uses the local model runtime and loads data from the retail database, refund rules, and routing guidelines.</desc>
 
   <!-- Fixed layout. Outer connectors meet their ports perpendicular to the box edges.

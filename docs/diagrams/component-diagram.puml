@@ -1,6 +1,6 @@
-@startuml component_simplified_auto
+@startuml component_diagram_auto
 ' Automatic architecture preview. The fixed thesis layout is in
-' component_simplified.svg. The preview uses a separate output name.
+' component-diagram.svg. The preview uses a separate output name.
 top to bottom direction
 
 skinparam monochrome true
