@@ -31,9 +31,11 @@ class OrderExtractor:
         self.prompt_version = PROMPT_VERSION
         self.client = ollama.Client(host=host)
         self.last_cost = StageCost()
+        self.last_parse_error = False
 
     def extract(self, message: str) -> str | None:
         self.last_cost = StageCost()
+        self.last_parse_error = False
         started = time.perf_counter()
         response = self.client.chat(
             model=self.model_name,
@@ -57,9 +59,11 @@ class OrderExtractor:
         )
 
         try:
-            found = json.loads(response["message"]["content"]).get("order_id")
+            found = json.loads(response["message"]["content"])["order_id"]
+            if not isinstance(found, str):
+                raise ValueError("order_id is not a string")
         except Exception:
+            self.last_parse_error = True
             return None
 
-        found = (found or "").strip()
-        return found or None
+        return found.strip() or None

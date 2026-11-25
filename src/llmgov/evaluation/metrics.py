@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from statistics import mean
@@ -8,7 +9,7 @@ from typing import Any
 from ..schemas import Action, RetrievedGuideline, StageCost, TraceRecord
 
 COST_RATIOS = (1, 2, 3, 5, 10, 20)
-STAGES = ("extract", "draft", "retrieve", "route")
+STAGES = ("extract", "draft", "search", "retrieve", "evaluate", "route")
 SEARCH_GROUPS = {"all": "all cases", "needs_review": "needing a human", "auto_send": "fine to send"}
 
 
@@ -31,6 +32,7 @@ class Metrics:
     always_review_correct: int
     cost_by_ratio: dict[str, int] = field(default_factory=dict)
     router_failures: int = 0
+    failure_stages: dict[str, int] = field(default_factory=dict)
     mean_latency_ms: float = 0.0
     stage_costs: dict[str, dict[str, Any]] = field(default_factory=dict)
     costs_per_stage: bool = False
@@ -166,6 +168,9 @@ def score(
     stage_costs, per_stage = _stage_costs(scored)
     retrieval, retrieval_k = _retrieval(scored, relevant)
 
+    failures = Counter(
+        t.decision.failure_stage or "route" for t in scored if t.decision.parse_error
+    )
     return Metrics(
         n=n,
         tp=tp,
@@ -183,7 +188,8 @@ def score(
         always_send_correct=tn + fp,
         always_review_correct=tp + fn,
         cost_by_ratio={str(w): w * fn + fp for w in COST_RATIOS},
-        router_failures=sum(1 for t in scored if t.decision.parse_error),
+        router_failures=sum(failures.values()),
+        failure_stages=dict(failures),
         mean_latency_ms=sum(t.latency_ms or 0.0 for t in scored) / n,
         stage_costs=stage_costs,
         costs_per_stage=per_stage,
@@ -229,7 +235,9 @@ def _cost_lines(m: Metrics) -> list[str]:
             f"    {label:20} {_secs(row['mean_ms']):>7}  {_secs(row['p95_ms']):>7}"
             f"   {_count(row['mean_prompt_tokens']):>9} {_count(row['mean_completion_tokens']):>6}"
         )
-    absent = [s for s in STAGES if s not in m.stage_costs]
+    absent = [
+        s for s in ("extract", "draft", "retrieve", "route") if s not in m.stage_costs
+    ]
     if m.costs_per_stage and absent:
         lines.append(f"    not part of this run: {', '.join(absent)}")
     if not m.costs_per_stage:
@@ -260,5 +268,9 @@ def format_report(m: Metrics, mode: str) -> str:
     lines += _retrieval_lines(m)
     lines += _cost_lines(m)
     if m.router_failures:
-        lines.append(f"  router failures      {m.router_failures}")
+        lines.append(f"  fail-safe reviews    {m.router_failures}")
+        if m.failure_stages:
+            lines.append(
+                "    " + ", ".join(f"{stage}: {n}" for stage, n in m.failure_stages.items())
+            )
     return "\n".join(lines)

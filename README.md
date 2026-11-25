@@ -59,10 +59,12 @@ LLM router                   AUTO_SEND or NEEDS_REVIEW, with a written reason
 enforce and record           the system acts, the model only advises
 ```
 
-The policy engine is the one step with no model in it. Refunds carry legal and
-financial consequences, so they get plain rules that behave the same way every
-time. Whether a reply is safe to send is a judgement call, and that part is the
-LLM's job.
+The policy engine uses plain rules that behave the same way every time. Whether
+a reply is safe to send is a judgement call, and that part is the LLM's job.
+
+The [simplified component diagram](docs/diagrams/component_simplified.svg) shows
+how the baseline system fits together. The [sequence diagram](docs/diagrams/sequence.svg)
+shows what happens step by step when a case runs from the web interface.
 
 If the order number is missing or wrong, the lookup comes back empty and the
 policy engine asks the customer for it. A model mistake costs someone a round
@@ -76,7 +78,7 @@ worded.
 
 ## Three modes
 
-The same router, changing only how much of the guideline corpus it gets.
+In the baseline, the same router can get a different amount of guidance.
 
 | Mode | Guidelines given |
 |---|---|
@@ -84,12 +86,23 @@ The same router, changing only how much of the guideline corpus it gets.
 | `full_context` | all of them |
 | `rag` | only the most relevant, retrieved by meaning |
 
+### Searcher and reply evaluator
+
+By default, RAG builds search queries from the message, the draft, and the
+order facts. The CLI also offers a version with two extra steps. A searcher
+writes queries for the same guideline index. A reply evaluator checks the draft
+against the policy decision, refund amount, and order facts.
+
+The router still makes the send-or-review decision. It sees the draft, the
+retrieved guidelines, and the evaluator's finding. If a step fails, the case
+goes to review and the trace records which step failed.
+
 ## Running it
 
 Needs [Ollama](https://ollama.com) with two local models:
 
 ```bash
-ollama pull qwen3.5:4b        # the router
+ollama pull qwen3.5:4b        # language model
 ollama pull nomic-embed-text  # guideline search
 ```
 
@@ -101,17 +114,22 @@ uv run llmgov run --mode rag --top-k 10
 ```
 
 `--mode` picks one of the three above. `--top-k` sets how many guidelines the
-search hands over, and only applies to `rag`. 
+search hands over, and only applies to `rag`.
 
-Runtime was around 35 to 50 minutes in my (GTX 1650Ti, i5 10th gen) laptop for all 30 cases. Each one is three model calls -
-reading the order number, writing the reply, judging it - and the model runs on
-the CPU.
+Use `--drafts data/drafts/v1.yaml` to reuse the saved replies from the 30
+development cases. This keeps the replies the same across runs.
 
-Results land in `runs/<n>-<mode>/`: `traces.jsonl` with a full record of every
-case, and `metrics.json` with the scores. Traces are never rewritten. Each one
-carries the prompt versions, the retrieval settings, and the Ollama version and
-model digest that produced it, so an old run can be read back and understood
-after everything else has moved on.
+```bash
+uv run llmgov run --mode rag --top-k 10 --drafts data/drafts/v1.yaml
+```
+
+For a quick check, add `--case-id C-001 --case-id C-014`. Run
+`uv run llmgov run --help` to see the available `--architecture` settings.
+
+Each run gets its own folder under `runs/`, with `traces.jsonl` for the case
+records and `metrics.json` for the scores. The traces record the settings and
+model builds used. When the searcher and evaluator are enabled, the traces also
+show their outputs, timing, and token use.
 
 
 ## The interface
@@ -120,7 +138,8 @@ after everything else has moved on.
 uv run uvicorn llmgov.api.app:app --reload
 ```
 
-Then open <http://127.0.0.1:8000>. It runs the same code as the CLI, in a browser.
+Then open <http://127.0.0.1:8000>. You can start baseline runs and inspect saved
+runs in the browser.
 
 The sidebar has the data on one side and the runs on the other.
 
@@ -163,7 +182,7 @@ src/llmgov/
   risk/         pattern detection and PII masking
   extraction/   reads the order number out of the customer's message
   drafting/     writes the reply from masked facts
-  routing/      the router, its prompts, and guideline retrieval
+  routing/      the router, guideline retrieval, the searcher, and the reply evaluator
   evaluation/   runs cases and scores them against the gold labels
   api/          the web interface and its templates
   loading_pdf.py  pulls the eighteen clauses out of the policy PDF
@@ -192,8 +211,7 @@ Precision, recall, F1 and accuracy are reported alongside.
 
 The guideline search is scored on its own: for each case, did the search return the guideline
 that decides it (hit rate), and how near the top (MRR). Every run also records the time and tokens
-of each step, so the cost of each mode is visible next to its results.
-
+of each step, so the cost of each version is visible next to its results.
 
 ## Future Work
 

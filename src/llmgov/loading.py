@@ -45,7 +45,14 @@ def load_gold_guidelines(path: str | Path) -> dict[str, list[str]]:
 
 def load_drafts(path: str | Path) -> dict[str, str]:
     """Replies pinned from an earlier run, so the router can be compared in isolation."""
-    return _read_yaml(path)["drafts"]
+    drafts, _ = load_draft_set(path)
+    return drafts
+
+
+def load_draft_set(path: str | Path) -> tuple[dict[str, str], dict[str, Any]]:
+    metadata = _read_yaml(path)
+    drafts = metadata.pop("drafts")
+    return drafts, metadata
 
 
 def load_cases(

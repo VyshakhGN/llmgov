@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="829" viewBox="0 0 800 829" role="img" aria-labelledby="title desc">
+  <title id="title">Refund response automation — simplified component diagram</title>
+  <desc id="desc">Five subsystems with vertical connections through UML boundary ports. The web console and experiment CLI use the pipeline runner. The evaluation workspace scores run traces and saves traces and metrics as evaluation outputs. The pipeline uses the local model runtime and loads data from the retail database, refund rules, and routing guidelines.</desc>
+
+  <!-- Fixed layout. Outer connectors meet their ports perpendicular to the box edges.
+       Keep the connector paths and their port centers aligned when moving a box. -->
+  <style>
+    text { font: 14px Arial, sans-serif; fill: #111; }
+    .group { fill: #fff; stroke: #222; stroke-width: 1.2; }
+    .node { fill: #fff; stroke: #333; stroke-width: 1; }
+    .heading { font-weight: bold; font-size: 16px; }
+    .label { text-anchor: middle; }
+    .contract { font-size: 13px; }
+    .wire { fill: none; stroke: #222; stroke-width: 1.2; stroke-linejoin: round; }
+    .symbol { fill: #fff; stroke: #222; stroke-width: 1; }
+  </style>
+  <defs>
+    <g id="component-glyph" class="symbol">
+      <rect x="3" y="0" width="12" height="10"/>
+      <rect x="0" y="2" width="6" height="2"/>
+      <rect x="0" y="6" width="6" height="2"/>
+    </g>
+    <g id="artifact-glyph" class="symbol">
+      <path d="M0 0 H7 L11 4 V13 H0 Z M7 0 V4 H11"/>
+    </g>
+    <rect id="port" x="-4" y="-4" width="8" height="8" fill="#222"/>
+    <g id="assembly" class="wire">
+      <path d="M-8 -5 Q0 -13 8 -5"/>
+      <circle cy="0" r="5.5" fill="#fff"/>
+    </g>
+  </defs>
+  <rect width="800" height="829" fill="#fff"/>
+
+  <g id="interfaces">
+    <rect class="group" x="24" y="24" width="318" height="160"/>
+    <text class="heading" x="42" y="52">Interfaces</text>
+    <use href="#component-glyph" x="311" y="41"/>
+
+    <rect class="node" x="43" y="84" width="125" height="57"/>
+    <use href="#component-glyph" x="145" y="92"/>
+    <text class="label" x="105.5" y="119">Web Console</text>
+
+    <rect class="node" x="186" y="84" width="137" height="57"/>
+    <use href="#component-glyph" x="300" y="92"/>
+    <text class="label" x="254.5" y="119">Experiment CLI</text>
+
+    <path class="wire" d="M105.5 141 V161 H307 V184 M254.5 141 V161"/>
+    <circle cx="254.5" cy="161" r="2" fill="#222"/>
+    <use href="#port" x="307" y="184"/>
+  </g>
+
+  <g id="evaluation">
+    <rect class="group" x="380" y="24" width="396" height="160"/>
+    <text class="heading" x="398" y="52">Evaluation Workspace</text>
+    <use href="#component-glyph" x="745" y="41"/>
+
+    <rect class="node" x="397" y="84" width="109" height="57"/>
+    <use href="#artifact-glyph" x="487" y="91"/>
+    <text class="label" x="451.5" y="117">Case Set +</text>
+    <text class="label" x="451.5" y="133">Gold Labels</text>
+
+    <rect class="node" x="523" y="84" width="112" height="57"/>
+    <use href="#component-glyph" x="612" y="92"/>
+    <text class="label" x="579" y="119">Metrics Engine</text>
+
+    <rect class="node" x="652" y="84" width="107" height="57"/>
+    <use href="#artifact-glyph" x="740" y="91"/>
+    <text class="label" x="705.5" y="117">Evaluation</text>
+    <text class="label" x="705.5" y="133">Outputs</text>
+
+    <path class="wire" d="M506 113 H523 M635 113 H652 M579 141 V184"/>
+    <use href="#port" x="579" y="184"/>
+  </g>
+
+  <g id="pipeline">
+    <rect class="group" x="24" y="254" width="752" height="327"/>
+    <text class="heading" x="42" y="282">Automation Pipeline</text>
+    <use href="#component-glyph" x="745" y="271"/>
+
+    <rect class="node" x="327" y="314" width="148" height="45"/>
+    <use href="#component-glyph" x="452" y="322"/>
+    <text class="label" x="401" y="343">Pipeline Runner</text>
+
+    <rect class="node" x="65" y="414" width="130" height="50"/>
+    <use href="#component-glyph" x="172" y="422"/>
+    <text class="label" x="130" y="445">Order Extractor</text>
+
+    <rect class="node" x="243" y="414" width="130" height="50"/>
+    <use href="#component-glyph" x="350" y="422"/>
+    <text class="label" x="308" y="445">Policy Engine</text>
+
+    <rect class="node" x="420" y="414" width="130" height="50"/>
+    <use href="#component-glyph" x="527" y="422"/>
+    <text class="label" x="485" y="445">Reply Drafter</text>
+
+    <rect class="node" x="598" y="414" width="130" height="50"/>
+    <use href="#component-glyph" x="705" y="422"/>
+    <text class="label" x="663" y="445">Risk Router</text>
+
+    <rect class="node" x="420" y="493" width="130" height="44"/>
+    <use href="#component-glyph" x="527" y="500"/>
+    <text class="label" x="485" y="523">PII Masking</text>
+
+    <rect class="node" x="598" y="493" width="130" height="44"/>
+    <use href="#component-glyph" x="705" y="500"/>
+    <text class="label" x="663" y="523">Guideline Retriever</text>
+
+    <!-- Boundary delegations. Keep the side routes clear of the four stage connections. -->
+    <path class="wire" d="M307 254 V332 H327 M579 254 V332 H475"/>
+    <path class="wire" d="M327 349 H48 V552 H307 V581 M475 349 H752 V552 H574 V581"/>
+
+    <path class="wire" d="M348 359 V380 H130 V414 M368 359 V394 H308 V414"/>
+    <path class="wire" d="M434 359 V394 H485 V414 M454 359 V380 H663 V414"/>
+    <path class="wire" d="M485 464 V493 M663 464 V493 M598 441 H574 V515 H550"/>
+
+    <use href="#port" x="307" y="254"/>
+    <use href="#port" x="579" y="254"/>
+    <use href="#port" x="307" y="581"/>
+    <use href="#port" x="574" y="581"/>
+  </g>
+
+  <g id="local-ai">
+    <rect class="group" x="24" y="650" width="318" height="155"/>
+    <text class="heading" x="42" y="678">Local AI Runtime</text>
+    <use href="#component-glyph" x="317" y="667"/>
+
+    <rect class="node" x="43" y="728" width="125" height="53"/>
+    <use href="#component-glyph" x="145" y="736"/>
+    <text class="label" x="105.5" y="761">LLM Completion</text>
+
+    <rect class="node" x="186" y="728" width="137" height="53"/>
+    <use href="#component-glyph" x="300" y="736"/>
+    <text class="label" x="254.5" y="761">Text Embeddings</text>
+
+    <path class="wire" d="M307 650 V706 H105.5 V728 M254.5 706 V728"/>
+    <circle cx="254.5" cy="706" r="2" fill="#222"/>
+    <use href="#port" x="307" y="650"/>
+  </g>
+
+  <g id="data-policy">
+    <rect class="group" x="380" y="650" width="396" height="155"/>
+    <text class="heading" x="398" y="678">Data &amp; Policy</text>
+    <use href="#component-glyph" x="745" y="667"/>
+
+    <rect class="node" x="499" y="682" width="150" height="36"/>
+    <use href="#component-glyph" x="626" y="689"/>
+    <text class="label" x="574" y="712">Data Access Layer</text>
+
+    <path class="node" d="M400 749 C400 739 493 739 493 749 V777 C493 787 400 787 400 777 Z"/>
+    <path class="wire" d="M400 749 C400 759 493 759 493 749"/>
+    <text class="label" x="446.5" y="774">Retail DB</text>
+
+    <rect class="node" x="514" y="742" width="120" height="45"/>
+    <use href="#artifact-glyph" x="615" y="749"/>
+    <text class="label" x="566" y="761">Refund Policy</text>
+    <text class="label" x="574" y="778">Rules (YAML)</text>
+
+    <rect class="node" x="642" y="742" width="117" height="45"/>
+    <use href="#artifact-glyph" x="740" y="749"/>
+    <text class="label" x="700.5" y="761">Routing</text>
+    <text class="label" x="700.5" y="778">Guidelines (PDF)</text>
+
+    <path class="wire" d="M574 650 V682 M522 718 V728 H446.5 V741.5 M574 718 V742 M626 718 V728 H702.5 V742"/>
+    <use href="#port" x="574" y="650"/>
+  </g>
+
+  <g id="external-contracts">
+    <path class="wire" d="M307 184 V210 M307 224.5 V254 M579 184 V210 M579 224.5 V254"/>
+    <path class="wire" d="M307 581 V606 M307 620.5 V650 M574 581 V606 M574 620.5 V650"/>
+    <use href="#assembly" x="307" y="219"/>
+    <use href="#assembly" x="579" y="219"/>
+    <use href="#assembly" x="307" y="615"/>
+    <use href="#assembly" x="574" y="615"/>
+    <text class="contract" x="325" y="224">Pipeline API</text>
+    <text class="contract" x="597" y="224">Run traces</text>
+    <text class="contract" x="325" y="620">Model API</text>
+    <text class="contract" x="592" y="620">Data Access</text>
+  </g>
+</svg>

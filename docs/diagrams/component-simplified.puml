@@ -1,0 +1,141 @@
+@startuml component_simplified_auto
+' Automatic architecture preview. The fixed thesis layout is in
+' component_simplified.svg. The preview uses a separate output name.
+top to bottom direction
+
+skinparam monochrome true
+skinparam backgroundColor white
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 42
+skinparam ranksep 54
+skinparam defaultFontName Arial
+skinparam defaultTextAlignment center
+skinparam component {
+  BackgroundColor white
+  BorderColor #333333
+  FontColor #111111
+}
+skinparam artifact {
+  BackgroundColor white
+  BorderColor #333333
+  FontColor #111111
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #333333
+  FontColor #111111
+}
+skinparam interface {
+  BackgroundColor white
+  BorderColor #333333
+}
+
+component "Interfaces" as INTERFACES {
+  portout " " as INTERFACES_API #black
+
+  component "Web Console" as WEB
+  component "Experiment CLI" as CLI
+
+  WEB -- INTERFACES_API
+  CLI -- INTERFACES_API
+  WEB -[hidden]down- CLI
+}
+
+component "Automation Pipeline" as PIPELINE {
+  portin " " as PIPELINE_API #black
+  portin " " as PIPELINE_EXPERIMENT #black
+  portout " " as PIPELINE_MODELS #black
+  portout " " as PIPELINE_DATA #black
+
+  component "Pipeline Runner" as RUNNER
+
+  component "Order\nExtractor" as EXTRACTOR
+  component "Policy\nEngine" as POLICY
+  component "Reply\nDrafter" as DRAFTER
+  component "Risk\nRouter" as ROUTER
+
+  component "PII Masking" as MASKING
+  component "Guideline\nRetriever" as RETRIEVER
+
+  PIPELINE_API -left- RUNNER
+  PIPELINE_EXPERIMENT -right- RUNNER
+
+  RUNNER -- EXTRACTOR
+  RUNNER -- POLICY
+  RUNNER -- DRAFTER
+  RUNNER -- ROUTER
+
+  DRAFTER -- MASKING
+  ROUTER -- MASKING
+  ROUTER -- RETRIEVER
+
+  RUNNER -- PIPELINE_MODELS
+  RUNNER -- PIPELINE_DATA
+
+  EXTRACTOR -[hidden]right- POLICY
+  POLICY -[hidden]right- DRAFTER
+  DRAFTER -[hidden]right- ROUTER
+  MASKING -[hidden]right- RETRIEVER
+}
+
+component "Local AI Runtime" as AI_RUNTIME {
+  portin " " as AI_MODELS #black
+
+  component "LLM\nCompletion" as LLM
+  component "Text\nEmbeddings" as EMBEDDINGS
+
+  AI_MODELS -- LLM
+  AI_MODELS -- EMBEDDINGS
+  LLM -[hidden]down- EMBEDDINGS
+}
+
+component "Evaluation Workspace" as EVALUATION {
+  portout " " as EVALUATION_API #black
+
+  artifact "Case Set +\nGold Labels" as CASES
+  component "Metrics\nEngine" as METRICS
+  artifact "Evaluation\nOutputs" as RUNS
+
+  EVALUATION_API -- METRICS
+  CASES -- METRICS
+  METRICS -- RUNS
+  CASES -[hidden]down- METRICS
+  METRICS -[hidden]down- RUNS
+}
+
+component "Data & Policy" as DATA {
+  portin " " as DATA_ACCESS #black
+
+  component "Data Access Layer" as REPOSITORIES
+  database "Retail DB" as RETAIL_DB
+  artifact "Refund Policy\nRules (YAML)" as POLICY_RULES
+  artifact "Routing Guidelines\n(PDF)" as GUIDELINES
+
+  DATA_ACCESS -[norank]down- REPOSITORIES
+  REPOSITORIES -- RETAIL_DB
+  REPOSITORIES -- POLICY_RULES
+  REPOSITORIES -- GUIDELINES
+  REPOSITORIES -[hidden]down- RETAIL_DB
+  RETAIL_DB -[hidden]right- POLICY_RULES
+  POLICY_RULES -[hidden]right- GUIDELINES
+}
+
+interface "Model API" as MODEL_API
+
+INTERFACES_API -right(0- "Pipeline API" PIPELINE_API
+EVALUATION_API -right(0- PIPELINE_EXPERIMENT : Run traces
+AI_MODELS -- MODEL_API
+MODEL_API -- PIPELINE_MODELS
+PIPELINE_DATA -right(0- DATA_ACCESS : Data Access
+
+INTERFACES -[hidden]right- PIPELINE
+PIPELINE -[hidden]right- AI_RUNTIME
+INTERFACES -[hidden]down- EVALUATION
+PIPELINE -[hidden]down- DATA
+EVALUATION -[hidden]right- DATA
+CLI -[hidden]right- RUNNER
+MODEL_API -[hidden]right- DRAFTER
+
+@enduml

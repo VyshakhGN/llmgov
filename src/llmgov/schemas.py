@@ -139,6 +139,7 @@ class RoutingDecision(BaseModel):
     retrieved_guidelines: list[RetrievedGuideline] = Field(default_factory=list)
     raw_model_output: str | None = None
     parse_error: str | None = None
+    failure_stage: str | None = None
 
 
 class HumanReview(BaseModel):
@@ -148,6 +149,20 @@ class HumanReview(BaseModel):
     edited_response: str | None = None
     notes: str = ""
     reviewed_at: datetime
+
+
+class StageCost(BaseModel):
+    ms: float | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+
+
+class AgentTrace(BaseModel):
+    prompt_version: str
+    prompt: str = ""
+    output: dict[str, Any] | None = None
+    error: str | None = None
+    cost: StageCost = Field(default_factory=StageCost)
 
 
 class PipelineStages(BaseModel):
@@ -167,13 +182,9 @@ class PipelineStages(BaseModel):
     extracted_order_id: str | None = None
     expected_order_id: str | None = None
     extract_prompt_version: str | None = None
-
-
-class StageCost(BaseModel):
-
-    ms: float | None = None
-    prompt_tokens: int | None = None
-    completion_tokens: int | None = None
+    system_facts: SystemFacts | None = None
+    frozen_draft_metadata: dict[str, Any] | None = None
+    agents: dict[str, AgentTrace] = Field(default_factory=dict)
 
 
 class TraceRecord(BaseModel):
@@ -184,6 +195,7 @@ class TraceRecord(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     mode: Mode
+    architecture: Literal["baseline", "option-b"] = "baseline"
     prompt_version: str = "n/a"
     model_name: str = "n/a"
     model_params: dict[str, Any] = Field(default_factory=dict)
